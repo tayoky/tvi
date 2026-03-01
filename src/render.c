@@ -38,7 +38,11 @@ void render_cursor(tvi_t *tvi) {
 		return;
 	}
 	win_t *win = tvi->focus_window;
-	term_goto(win->x + win->cursor_x, win->y + win->cursor_y);
+	int x = win->cursor_x;
+	int y = win->cursor_y;
+	size_t line_len = strlen(win->text[y]);
+	if ((size_t)x > line_len) x = line_len;
+	term_goto(win->x + x, win->y + y);
 }
 
 void render_prompt(tvi_t *tvi) {

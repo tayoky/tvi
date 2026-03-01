@@ -15,7 +15,7 @@ typedef struct win {
 	int scroll;
 	int flags;
 	char **text;
-	size_t lines_count;
+	int lines_count;
 } win_t;
 
 typedef struct tvi {
@@ -53,6 +53,7 @@ extern int term_width;
 extern int term_height;
 
 #define ESC "\033"
+#define CRTL(c) (c - 'A' + 1)
 #define MODE_COMMAND  2
 #define MODE_INSERT   1
 #define FLAG_PROMPT   0x01 // when prompt is enabled

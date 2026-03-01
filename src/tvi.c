@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <stdio.h>
 #include <tvi.h>
 
@@ -57,6 +58,96 @@ static int prompt(tvi_t *tvi, const char *initial, int multiline) {
 	return 0;
 }
 
+// fix cursor position
+static void fix_cursor(tvi_t *tvi) {
+	win_t *win = tvi->focus_window;
+	int x = win->cursor_x;
+	int y = win->cursor_y;
+	size_t line_len = strlen(win->text[y]);
+	if ((size_t)x > line_len) {
+		win->cursor_x = line_len;
+	}
+}
+
+// return 1 if interpreted
+static int move_command(tvi_t *tvi, int c, int count) {
+	win_t *win = tvi->focus_window;
+
+	// we cannot know backward char at compile time
+	if (term_is_delete(c)) {
+		goto backward;
+	}
+	int line_len = strlen(win->text[win->cursor_y]);
+
+	switch (c) {
+	case 'h':
+	case CRTL('H'):
+backward:
+		fix_cursor(tvi);
+		if (win->cursor_x <= 0) {
+			term_bell();
+		} else if (win->cursor_x < count) {
+			win->cursor_x = 0;
+		} else {
+			win->cursor_x -= count;
+		}
+		return 1;
+	case '\n':
+	case CRTL('N'):
+	case 'j':
+	case '\r':
+	case '+':
+		if (win->lines_count >= win->cursor_y) {
+			term_bell();
+		} else if (win->lines_count - win->cursor_y < count) {
+			win->cursor_y = win->lines_count;
+		} else {
+			win->cursor_y += count;
+		}
+		// TODO : change cursor x
+		return 1;
+	case CRTL('P'):
+	case 'k':
+	case '-':
+		if (win->cursor_y <= 0) {
+			term_bell();
+		} else if (win->cursor_y < count) {
+			win->cursor_y = 0;
+		} else {
+			win->cursor_y -= count;
+		}
+		// TODO : change cursor x
+		return 1;
+	case ' ':
+	case 'l':
+		if (line_len <= win->cursor_x) {
+			term_bell();
+		} else if (line_len - win->cursor_x < count) {
+			win->cursor_x = line_len;
+		} else {
+			win->cursor_x += count;
+		}
+		return 1;
+	case '$':
+		if (count) {
+			if (win->lines_count >= win->cursor_y) {
+				term_bell();
+			} else if (win->lines_count - win->cursor_y < count-1) {
+				win->cursor_y = win->lines_count;
+			} else {
+				win->cursor_y += count-1;
+			}
+		}
+		win->cursor_x = INT_MAX;
+		return 1;
+	case '0':
+		win->cursor_x = 0;
+		return 1;
+	default:
+		return 0;
+	}
+}
+
 // the main loop
 int tvi_main(tvi_t *tvi) {
 	win_t *win = win_create(tvi);
@@ -67,6 +158,10 @@ int tvi_main(tvi_t *tvi) {
 	render_flush(tvi);
 	while (!(tvi->flags & FLAG_QUIT)) {
 		int c = getchar();
+		if (move_command(tvi, c, 1)) {
+			render_flush(tvi);
+			continue;
+		}
 		switch (c) {
 		case ':':
 			if (prompt(tvi, ":", 0) < 0) break;
