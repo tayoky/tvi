@@ -21,8 +21,7 @@ test : $(BUILDDIR)/tvi
 $(BUILDDIR)/tvi : $(OBJ)
 	@echo '[linking into $@]'
 	@mkdir -p $(shell dirname $@)
-	@$(CC) -o $@ $^ $(CFLAGS) ../tlibc/build/libc/stdlib/qsort.o
-
+	@$(CC) -o $@ $^ $(CFLAGS)
 
 $(BUILDDIR)/%.o : $(SRCDIR)/%.c 
 	@echo '[compiling $^]'
