@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <tvi.h>
 
-static int prompt(tvi_t *tvi, const char *initial, int multiline) {
+int prompt(tvi_t *tvi, const char *initial, int newline) {
 	strcpy(tvi->prompt, initial);
 	tvi->prompt_len = strlen(initial);
 	tvi->prompt_cursor = tvi->prompt_len;
@@ -14,6 +14,7 @@ static int prompt(tvi_t *tvi, const char *initial, int multiline) {
 	for (;;) {
 		int c = getchar();
 		if (c == '\033') {
+exit_prompt:
 			tvi->prompt_len = 0;
 			tvi->flags &= ~FLAG_PROMPT;
 			render_prompt(tvi);
@@ -22,6 +23,10 @@ static int prompt(tvi_t *tvi, const char *initial, int multiline) {
 		}
 
 		if (term_is_delete(c)) {
+			if (tvi->prompt_len <= strlen(initial)) {
+				// exit prompt when it become empty
+				goto exit_prompt;
+			}
 			if (tvi->prompt_cursor <= 0) {
 				term_bell();
 				continue;
@@ -31,11 +36,6 @@ static int prompt(tvi_t *tvi, const char *initial, int multiline) {
 			tvi->prompt_len--;
 			render_prompt(tvi);
 			render_flush(tvi);
-			if (!multiline && tvi->prompt_len == 0) {
-				tvi->flags &= ~FLAG_PROMPT;
-				render_flush(tvi);
-				return -1;
-			}
 			continue;
 		}
 
@@ -49,8 +49,9 @@ static int prompt(tvi_t *tvi, const char *initial, int multiline) {
 		memmove(&tvi->prompt[tvi->prompt_cursor+1], &tvi->prompt[tvi->prompt_cursor], tvi->prompt_len - tvi->prompt_cursor);
 		tvi->prompt[tvi->prompt_cursor++] = c;
 		tvi->prompt_len++;
-		if (c == '\n') break;
+		if (c == '\n' && !newline) break;
 		render_prompt(tvi);
+		if (c == '\n') break;
 		render_flush(tvi);
 	}
 	tvi->prompt[tvi->prompt_len] = '\0';

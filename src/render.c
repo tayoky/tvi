@@ -37,6 +37,12 @@ void render_window(tvi_t *tvi, win_t *win) {
 	render_status(tvi, win);
 }
 
+void render_all_windows(tvi_t *tvi) {
+	for (win_t *win=tvi->first_window; win; win=win->next) {
+		render_window(tvi, win);
+	}
+}
+
 void render_cursor(tvi_t *tvi) {
 	if (tvi->flags & FLAG_PROMPT) {
 		term_goto(tvi->prompt_cursor, term_height-1);

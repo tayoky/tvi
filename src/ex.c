@@ -18,6 +18,36 @@ typedef struct ex_command {
 
 #define COMMAND(_name, _func, _min, _max) {.name = _name, .func = _func, .min_args = _min, .max_args = _max}
 
+static char **ex_input(tvi_t *tvi, size_t *_lines_count) {
+	size_t lines_count = 0;
+	char **lines = NULL;
+	for (;;) {
+		if (prompt(tvi, "", 1) < 0) break;
+		// stop input on line with only "."
+		if (!strcmp(".\n", tvi->prompt)) break;
+
+		// strip the newline
+		if (tvi->prompt[strlen(tvi->prompt)-1] == '\n') {
+			tvi->prompt[strlen(tvi->prompt)-1] = '\0';
+		}
+
+		lines_count++;
+		lines = realloc(lines, sizeof(char*) * lines_count);
+		lines[lines_count-1] = strdup(tvi->prompt);
+	}
+	if (!lines_count) return NULL;
+	render_all_windows(tvi);
+	*_lines_count = lines_count;
+	return lines;
+}
+
+static void free_input(char **lines, size_t lines_count) {
+	for (size_t i=0; i<lines_count; i++) {
+		free(lines[i]);
+	}
+	free(lines);
+}
+
 static int ex_quit(tvi_t *tvi, ex_args_t *args) {
 	(void)args;
 	tvi->flags |= FLAG_QUIT;
@@ -37,9 +67,21 @@ static int ex_print(tvi_t *tvi, ex_args_t *args) {
 	return 0;
 }
 
+static int ex_append(tvi_t *tvi, ex_args_t *args) {
+	size_t lines_count;
+	char **lines = ex_input(tvi, &lines_count);
+	if (!lines) return 0;
+	text_insert_lines(tvi->focus_window, args->addr1+1, lines, lines_count);
+	render_window(tvi, tvi->focus_window);
+	render_flush(tvi);
+	free_input(lines, lines_count);
+	return 0;
+}
+
 static ex_command_t commands[] = {
-	COMMAND("quit", ex_quit, 0, 0),
+	COMMAND("append", ex_append, 0, 0),
 	COMMAND("print", ex_print, 0, 0),
+	COMMAND("quit", ex_quit, 0, 0),
 	COMMAND(NULL, NULL, 0, 0),
 };
 
@@ -129,7 +171,9 @@ int ex_command(tvi_t *tvi, const char *command) {
 	// skip leading blank
 	while (is_blank(*command)) command++;
 	
-	if (!command) return 0;	
+	if (!command) return 0;
+
+	// TODO : range check
 
 	const char *name = command;
 	size_t name_len = 0;
