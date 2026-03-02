@@ -12,9 +12,10 @@ win_t *win_create(tvi_t *tvi) {
 	}
 	tvi->first_window = win;
 	tvi->focus_window = win;
-	win->text = malloc(sizeof(char*));
+	win->text = malloc(2*sizeof(char*));
 	win->text[0] = strdup("hello world");
-	win->lines_count = 1;
+	win->text[1] = strdup(" line 2");
+	win->lines_count = 2;
 	return win;
 }
 

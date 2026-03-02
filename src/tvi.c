@@ -1,4 +1,5 @@
 #include <limits.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <tvi.h>
 
@@ -69,9 +70,23 @@ static void fix_cursor(tvi_t *tvi) {
 	}
 }
 
+// set cursor to first non blank char on the line
+static void cursor_to_non_blank(tvi_t *tvi) {
+	win_t *win = tvi->focus_window;
+	int x = 0;
+	const char *line = win->text[win->cursor_y];
+	while (isblank(line[x])) {
+		x++;
+	}
+	win->cursor_x = x;
+}
+
 // return 1 if interpreted
 static int move_command(tvi_t *tvi, int c, int count) {
 	win_t *win = tvi->focus_window;
+
+	int have_count = count ? 1 : 0;
+	if (!have_count) count = 1;
 
 	// we cannot know backward char at compile time
 	if (term_is_delete(c)) {
@@ -80,6 +95,9 @@ static int move_command(tvi_t *tvi, int c, int count) {
 	int line_len = strlen(win->text[win->cursor_y]);
 
 	switch (c) {
+	case '^':
+		cursor_to_non_blank(tvi);
+		return 1;
 	case 'h':
 	case CRTL('H'):
 backward:
@@ -97,10 +115,10 @@ backward:
 	case 'j':
 	case '\r':
 	case '+':
-		if (win->lines_count >= win->cursor_y) {
+		if (win->lines_count - 1 <= win->cursor_y) {
 			term_bell();
-		} else if (win->lines_count - win->cursor_y < count) {
-			win->cursor_y = win->lines_count;
+		} else if (win->lines_count - win->cursor_y - 1 < count) {
+			win->cursor_y = win->lines_count-1;
 		} else {
 			win->cursor_y += count;
 		}
@@ -143,6 +161,18 @@ backward:
 	case '0':
 		win->cursor_x = 0;
 		return 1;
+	case 'G':
+		if (have_count) {
+			if (count >= win->lines_count) {
+				term_bell();
+				return 1;
+			}
+		} else {
+			count = win->lines_count-1;
+		}
+		win->cursor_y = count;
+		cursor_to_non_blank(tvi);
+		return 1;
 	default:
 		return 0;
 	}
@@ -158,7 +188,8 @@ int tvi_main(tvi_t *tvi) {
 	render_flush(tvi);
 	while (!(tvi->flags & FLAG_QUIT)) {
 		int c = getchar();
-		if (move_command(tvi, c, 1)) {
+		if (move_command(tvi, c, 0)) {
+			render_status(tvi, win);
 			render_flush(tvi);
 			continue;
 		}
