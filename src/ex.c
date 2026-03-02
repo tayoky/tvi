@@ -25,7 +25,11 @@ static char **ex_input(tvi_t *tvi, size_t *_lines_count) {
 	size_t lines_count = 0;
 	char **lines = NULL;
 	for (;;) {
-		if (prompt(tvi, "", 1) < 0) break;
+		if (tvi->mode == MODE_VISUAL) {
+			if (prompt(tvi, "", 1) < 0) break;
+		} else {
+			if (!fgets(tvi->prompt, sizeof(tvi->prompt), stdin)) break;
+		}
 		// stop input on line with only "."
 		if (!strcmp(".\n", tvi->prompt)) break;
 
@@ -112,9 +116,11 @@ static int parse_addr(tvi_t *tvi, const char *src, const char **end) {
 	switch (*src) {
 	case '.':
 		addr = win->cursor_y;
+		src++;
 		break;
 	case '$':
 		addr = win->lines_count - 1;
+		src++;
 		break;
 	case '+':
 	case '-':
@@ -244,6 +250,7 @@ int ex_main(tvi_t *tvi) {
 	while (!(tvi->flags & FLAG_QUIT)) {
 		char command[256];
 		printf(":");
+		fflush(stdout);
 		while (!fgets(command, sizeof(command), stdin));
 		ex_command(tvi, command);
 	}

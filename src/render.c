@@ -33,11 +33,13 @@ void render_status(tvi_t *tvi, win_t *win) {
 }
 
 void render_window(tvi_t *tvi, win_t *win) {
+	if (tvi->mode != MODE_VISUAL) return;
 	render_text(tvi, win);
 	render_status(tvi, win);
 }
 
 void render_all_windows(tvi_t *tvi) {
+	if (tvi->mode != MODE_VISUAL) return;
 	for (win_t *win=tvi->first_window; win; win=win->next) {
 		render_window(tvi, win);
 	}
@@ -64,6 +66,7 @@ void render_prompt(tvi_t *tvi) {
 }
 
 void render_flush(tvi_t *tvi) {
+	if (tvi->mode != MODE_VISUAL) return;
 	render_cursor(tvi);
 	fflush(stdout);
 }
