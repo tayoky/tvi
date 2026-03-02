@@ -15,12 +15,7 @@ void term_fetch_size(void) {
 	term_height = winsz.ws_row;
 }
 
-int term_enter_fullscreen(void) {
-	printf(ESC"[?1049h");
-	printf(ESC"[2J");
-	printf(ESC"[H");
-	fflush(stdout);
-
+int term_enable_raw_mode(void) {
 	// save old termios
 	if(tcgetattr(STDIN_FILENO, &old) < 0){
 		perror("tcgetattr");
@@ -35,11 +30,23 @@ int term_enter_fullscreen(void) {
 	return 0;
 }
 
-void term_exit_fullscreen(void) {
+void term_quit_raw_mode(void) {
 	// restore old termios
 	if(tcsetattr(STDIN_FILENO, TCSANOW, &old) < 0){
 		perror("tcsetattr");
 	}
+}
+
+int term_enter_fullscreen(void) {
+	if (!isatty(STDOUT_FILENO)) return -1;
+	printf(ESC"[?1049h");
+	printf(ESC"[2J");
+	printf(ESC"[H");
+	fflush(stdout);
+	return 0;
+}
+
+void term_exit_fullscreen(void) {
 	printf(ESC"[?1049l");
 }
 

@@ -28,6 +28,8 @@ typedef struct tvi {
 	win_t *first_window;
 } tvi_t;
 
+int term_enable_raw_mode(void);
+void term_quit_raw_mode(void);
 int term_enter_fullscreen(void);
 void term_exit_fullscreen(void);
 void term_clear_line(void);
@@ -49,6 +51,7 @@ win_t *win_create(tvi_t *tvi);
 void win_free(tvi_t *tvi, win_t *win);
 int ex_command(tvi_t *tvi, const char *command);
 int tvi_main(tvi_t *tvi);
+int ex_main(tvi_t *tvi);
 void error(tvi_t *tvi, const char *fmt, ...);
 void print(tvi_t *tvi, const char *fmt, ...);
 

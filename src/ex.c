@@ -162,3 +162,14 @@ int ex_command(tvi_t *tvi, const char *command) {
 	error(tvi, "not an editor command : '%.*s'", (int)name_len, name);
 	return -1;
 }
+
+int ex_main(tvi_t *tvi) {
+	print(tvi, "entering ex mode, type visual to get to visual mode");
+	while (!(tvi->flags & FLAG_QUIT)) {
+		char command[256];
+		printf(":");
+		while (!fgets(command, sizeof(command), stdin));
+		ex_command(tvi, command);
+	}
+	return 0;
+}

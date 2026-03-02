@@ -180,8 +180,10 @@ backward:
 
 // the main loop
 int tvi_main(tvi_t *tvi) {
-	tvi->mode = MODE_VISUAL;
-	win_t *win = win_create(tvi);
+	if (term_enable_raw_mode() < 0) {
+		return -1;
+	}
+	win_t *win = tvi->focus_window;
 	term_fetch_size();
 	win->width  = term_width;
 	win->height = term_height-1;
@@ -202,5 +204,6 @@ int tvi_main(tvi_t *tvi) {
 			break;
 		}
 	}
+	term_quit_raw_mode();
 	return 0;
 }
