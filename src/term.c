@@ -67,3 +67,7 @@ void term_reset_color(void) {
 void term_inverse_color(void) {
 	printf(ESC"[0;7m");
 }
+
+void term_error_color(void) {
+	printf(ESC"[0;41;37m");
+}

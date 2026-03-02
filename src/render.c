@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <stdio.h>
 #include <tvi.h>
 
@@ -59,4 +60,16 @@ void render_prompt(tvi_t *tvi) {
 void render_flush(tvi_t *tvi) {
 	render_cursor(tvi);
 	fflush(stdout);
+}
+
+void error(tvi_t *tvi, const char *fmt, ...) {
+	va_list args;
+	va_start(args, fmt);
+	if (tvi->mode == MODE_VISUAL) term_goto(0, term_height-1);
+	term_reset_color();
+	term_clear_line();
+	term_error_color();
+	vprintf(fmt, args);
+	va_end(args);
+	if (tvi->mode == MODE_EX) putchar('\n');
 }

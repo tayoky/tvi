@@ -37,6 +37,7 @@ int term_is_delete(int c);
 void term_fetch_size(void);
 void term_reset_color(void);
 void term_inverse_color(void);
+void term_error_color(void);
 void render_text(tvi_t *tvi, win_t *win);
 void render_line(tvi_t *tvi, win_t *win, int y);
 void render_status(tvi_t *tvi, win_t *win);
@@ -48,14 +49,15 @@ win_t *win_create(tvi_t *tvi);
 void win_free(tvi_t *tvi, win_t *win);
 int ex_command(tvi_t *tvi, const char *command);
 int tvi_main(tvi_t *tvi);
+void error(tvi_t *tvi, const char *fmt, ...);
 
 extern int term_width;
 extern int term_height;
 
 #define ESC "\033"
 #define CRTL(c) (c - 'A' + 1)
-#define MODE_COMMAND  2
-#define MODE_INSERT   1
+#define MODE_VISUAL   1
+#define MODE_EX       2
 #define FLAG_PROMPT   0x01 // when prompt is enabled
 #define FLAG_QUIT     0x02
 

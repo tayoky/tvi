@@ -180,6 +180,7 @@ backward:
 
 // the main loop
 int tvi_main(tvi_t *tvi) {
+	tvi->mode = MODE_VISUAL;
 	win_t *win = win_create(tvi);
 	term_fetch_size();
 	win->width  = term_width;
