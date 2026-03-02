@@ -71,5 +71,18 @@ void error(tvi_t *tvi, const char *fmt, ...) {
 	term_error_color();
 	vprintf(fmt, args);
 	va_end(args);
+	term_reset_color();
+	if (tvi->mode == MODE_EX) putchar('\n');
+}
+
+void print(tvi_t *tvi, const char *fmt, ...) {
+	va_list args;
+	va_start(args, fmt);
+	if (tvi->mode == MODE_VISUAL) term_goto(0, term_height-1);
+	term_reset_color();
+	term_clear_line();
+	vprintf(fmt, args);
+	va_end(args);
+	term_reset_color();
 	if (tvi->mode == MODE_EX) putchar('\n');
 }

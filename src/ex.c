@@ -18,14 +18,28 @@ typedef struct ex_command {
 
 #define COMMAND(_name, _func, _min, _max) {.name = _name, .func = _func, .min_args = _min, .max_args = _max}
 
-static int quit(tvi_t *tvi, ex_args_t *args) {
+static int ex_quit(tvi_t *tvi, ex_args_t *args) {
 	(void)args;
 	tvi->flags |= FLAG_QUIT;
 	return 0;
 }
 
+static int ex_print(tvi_t *tvi, ex_args_t *args) {
+	win_t *win = tvi->focus_window;
+	for (int line=args->addr1; line<=args->addr2; line++) {
+		const char *content = win->text[line];
+		if (line == args->addr2) {
+			print(tvi, "%s", content);
+		} else {
+			print(tvi, "%s\n", content);
+		}
+	}
+	return 0;
+}
+
 static ex_command_t commands[] = {
-	COMMAND("quit", quit, 0, 0),
+	COMMAND("quit", ex_quit, 0, 0),
+	COMMAND("print", ex_print, 0, 0),
 	COMMAND(NULL, NULL, 0, 0),
 };
 
@@ -67,7 +81,10 @@ int ex_command(tvi_t *tvi, const char *command) {
 	// skip leading colons
 	while (*command == ':') command++;
 
-	ex_args_t args;
+	ex_args_t args = {
+		.addr1 = win->cursor_y,
+		.addr2 = win->cursor_y,
+	};
 	int addrs_count = 0;
 
 	// parse addresses

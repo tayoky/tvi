@@ -50,6 +50,7 @@ void win_free(tvi_t *tvi, win_t *win);
 int ex_command(tvi_t *tvi, const char *command);
 int tvi_main(tvi_t *tvi);
 void error(tvi_t *tvi, const char *fmt, ...);
+void print(tvi_t *tvi, const char *fmt, ...);
 
 extern int term_width;
 extern int term_height;
