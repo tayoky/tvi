@@ -90,5 +90,5 @@ void print(tvi_t *tvi, const char *fmt, ...) {
 	vprintf(fmt, args);
 	va_end(args);
 	term_reset_color();
-	if (tvi->mode == MODE_EX) putchar('\n');
+	if (tvi->mode == MODE_EX && fmt[strlen(fmt)-1] != '\n') putchar('\n');
 }
