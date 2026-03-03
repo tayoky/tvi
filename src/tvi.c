@@ -241,6 +241,7 @@ int tvi_main(tvi_t *tvi) {
 			}
 		}
 		win_t *win = tvi->focus_window;
+		size_t line_len = strlen(win->text[win->cursor_y]);
 		if (move_command(tvi, c, count)) {
 			render_status(tvi, win);
 			render_flush(tvi);
@@ -257,11 +258,40 @@ int tvi_main(tvi_t *tvi) {
 			insert_mode(tvi);
 			break;
 		case 'A':
-			win->cursor_x = INT_MAX;
+			win->cursor_x = line_len;
 			insert_mode(tvi);
 			break;
 		case 'i':
 			insert_mode(tvi);
+			break;
+		case 'I':
+			cursor_to_non_blank(tvi);
+			insert_mode(tvi);
+			break;
+		case 'x':
+			fix_cursor(tvi);
+			if (!count) count = 1;
+			if ((size_t)win->cursor_x >= line_len) {
+				term_bell();
+				break;
+			}
+			if ((size_t)count > line_len - win->cursor_x) count = line_len - win->cursor_x;
+			text_delete(win, win->cursor_x, win->cursor_y, count);
+			render_line(tvi, win, win->cursor_y - win->scroll);
+			render_flush(tvi);
+			break;
+		case 'X':
+			fix_cursor(tvi);
+			if (!count) count = 1;
+			if (win->cursor_x <= 0) {
+				term_bell();
+				break;
+			}
+			if (count > win->cursor_x) count = win->cursor_x;
+			win->cursor_x -= count;
+			text_delete(win, win->cursor_x, win->cursor_y, count);
+			render_line(tvi, win, win->cursor_y - win->scroll);
+			render_flush(tvi);
 			break;
 		case CRTL('E'):
 			if (win->scroll >= win->lines_count - 1) {
