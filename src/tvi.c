@@ -192,7 +192,18 @@ int tvi_main(tvi_t *tvi) {
 	render_flush(tvi);
 	while (!(tvi->flags & FLAG_QUIT)) {
 		int c = getchar();
-		if (move_command(tvi, c, 0)) {
+		int count = 0;
+
+		if (isdigit(c) && c != '0') {
+			// we have a count
+			while (isdigit(c)) {
+				count = c - '0';
+				c *= 10;
+				c = getchar();
+			}
+		}
+		win_t *win = tvi->focus_window;
+		if (move_command(tvi, c, count)) {
 			render_status(tvi, win);
 			render_flush(tvi);
 			continue;
@@ -202,6 +213,24 @@ int tvi_main(tvi_t *tvi) {
 			if (prompt(tvi, ":", 0) < 0) break;
 			if (tvi->prompt_len < 2) break;
 			ex_command(tvi, tvi->prompt);
+			break;
+		case CRTL('E'):
+			if (win->scroll >= win->lines_count - 1) {
+				term_bell();
+				break;
+			}
+			win->scroll++;
+			render_window(tvi, win);
+			render_flush(tvi);
+			break;
+		case CRTL('Y'):
+			if (win->scroll <= 0) {
+				term_bell();
+				break;
+			}
+			win->scroll--;
+			render_window(tvi, win);
+			render_flush(tvi);
 			break;
 		}
 	}

@@ -58,7 +58,7 @@ void render_cursor(tvi_t *tvi) {
 	int y = win->cursor_y;
 	size_t line_len = strlen(win->text[y]);
 	if ((size_t)x > line_len) x = line_len;
-	term_goto(win->x + x, win->y + y);
+	term_goto(win->x + x, win->y + y - win->scroll);
 }
 
 void render_prompt(tvi_t *tvi) {
