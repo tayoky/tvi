@@ -92,7 +92,15 @@ int insert_mode(tvi_t *tvi) {
 		}
 		if (term_is_delete(c)) {
 			if (win->cursor_x == 0) {
-				term_bell();
+				if (win->cursor_y <= 0) {
+					term_bell();
+					continue;
+				}
+				win->cursor_x = strlen(win->text[win->cursor_y-1]);
+				text_join(win, win->cursor_y-1, win->cursor_y, 0);
+				win->cursor_y--;
+				render_window(tvi, win);
+				render_flush(tvi);
 				continue;
 			}
 			win->cursor_x--;

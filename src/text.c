@@ -39,3 +39,29 @@ void text_delete_buf(win_t *win, int x, int y, char *buf, size_t count) {
 void text_delete(win_t *win, int x, int y, size_t count) {
 	text_delete_buf(win, x, y, NULL, count);
 }
+
+void text_delete_lines(win_t *win, int addr, size_t count) {
+	memmove(&win->text[addr], &win->text[addr+count], (win->lines_count - addr - count) * sizeof(char*));
+	win->lines_count -= count;
+}
+
+void text_join(win_t *win, int first, int last, char sep) {
+	size_t new_size = 1;
+	if (sep) {
+		new_size += (last - first);
+	}
+	for (int current=first; current<=last; current++) {
+		new_size += strlen(win->text[current]);
+	}
+	char *line = win->text[first];
+	line = realloc(line, new_size);
+	for (int current=first+1; current<=last; current++) {
+		if (sep) {
+			char buf[2] = {sep, 0};
+			strcat(line, buf);
+		}
+		strcat(line, win->text[current]);
+	}
+	win->text[first] = line;
+	text_delete_lines(win, first+1, last-first);
+}
