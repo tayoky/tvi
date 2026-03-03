@@ -112,13 +112,23 @@ static int ex_next(tvi_t *tvi, ex_args_t *args) {
 	win->file_index++;
 	read_file(win, win->files[win->file_index]);
 	render_window(tvi, win);
+	render_flush(tvi);
+	return 0;
+}
 
+static int ex_join(tvi_t *tvi, ex_args_t *args) {
+	win_t *win = tvi->focus_window;
+	// TODO : modify lines
+	text_join(win, args->addr1, args->addr2, ' ');
+	render_window(tvi, win);
+	render_flush(tvi);
 	return 0;
 }
 
 static ex_command_t commands[] = {
 	COMMAND("append", ex_append, FLAG_BANG, 1),
 	COMMAND("insert", ex_insert, FLAG_BANG, 1),
+	COMMAND("join", ex_join, FLAG_BANG, 2),
 	COMMAND("next", ex_next, FLAG_BANG, 0),
 	COMMAND("print", ex_print, 0, 2),
 	COMMAND("quit", ex_quit, FLAG_BANG, 0),

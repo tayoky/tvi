@@ -282,6 +282,19 @@ int tvi_main(tvi_t *tvi) {
 			cursor_to_non_blank(tvi);
 			insert_mode(tvi);
 			break;
+		case 'J':
+			if (!count) count = 2;
+			count--;
+			if (win->cursor_y >= win->lines_count - 1) {
+				term_bell();
+				break;
+			}
+			if (win->cursor_y + count >= win->lines_count) count = win->lines_count - win->cursor_y - 1;
+			// TODO : modify lines
+			text_join(win, win->cursor_y, win->cursor_y + count, ' ');
+			render_window(tvi, win);
+			render_flush(tvi);
+			break;
 		case 'x':
 			fix_cursor(tvi);
 			if (!count) count = 1;
