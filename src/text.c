@@ -12,3 +12,27 @@ void text_insert_lines(win_t *win, int addr, char *const*lines, size_t lines_cou
 		win->text[addr+i] = strdup(lines[i]);
 	}
 }
+
+void text_insert_newline(win_t *win, int x, int y) {
+
+}
+
+void text_insert_buf(win_t *win, int x, int y, const char *buf, size_t count) {
+	char *line = win->text[y];
+	line = realloc(line, strlen(line) + 1 + count);
+	memmove(&line[x+count], &line[x], strlen(line) - x + 1);
+	memcpy(&line[x], buf, count);
+	win->text[y] = line;
+}
+
+void text_delete_buf(win_t *win, int x, int y, char *buf, size_t count) {
+	char *line = win->text[y];
+	if (buf) {
+		memcpy(buf, &line[x], count);
+	}
+	memmove(&line[x], &line[x+count], strlen(line) - x - count + 1);
+}
+
+void text_delete(win_t *win, int x, int y, size_t count) {
+	text_delete_buf(win, x, y, NULL, count);
+}

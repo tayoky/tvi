@@ -71,6 +71,44 @@ static void fix_cursor(tvi_t *tvi) {
 	}
 }
 
+int insert_mode(tvi_t *tvi) {
+	fix_cursor(tvi);
+	
+	print(tvi, "-- INSERT --");
+	render_flush(tvi);
+
+	win_t *win = tvi->focus_window;
+
+	for (;;) {
+		int c = getchar();
+		if (c == '\033') break;
+		if (c == '\n') {
+			continue;
+		}
+		if (term_is_delete(c)) {
+			if (win->cursor_x == 0) {
+				term_bell();
+				continue;
+			}
+			win->cursor_x--;
+			text_delete(win, win->cursor_x, win->cursor_y, 1);
+			goto redraw;
+		}
+		char buf = (unsigned char)c;
+		text_insert_buf(win, win->cursor_x, win->cursor_y, &buf, 1);
+		win->cursor_x++;
+redraw:
+		render_window(tvi, win);
+		render_flush(tvi);
+	}
+
+	// erase the "-- INSERT --"
+	print(tvi, "");
+	if (win->cursor_x > 0) win->cursor_x--;
+	render_flush(tvi);
+	return 0;
+}
+
 // set cursor to first non blank char on the line
 static void cursor_to_non_blank(tvi_t *tvi) {
 	win_t *win = tvi->focus_window;
@@ -213,6 +251,17 @@ int tvi_main(tvi_t *tvi) {
 			if (prompt(tvi, ":", 0) < 0) break;
 			if (tvi->prompt_len < 2) break;
 			ex_command(tvi, tvi->prompt);
+			break;
+		case 'a':
+			win->cursor_x++;
+			insert_mode(tvi);
+			break;
+		case 'A':
+			win->cursor_x = INT_MAX;
+			insert_mode(tvi);
+			break;
+		case 'i':
+			insert_mode(tvi);
 			break;
 		case CRTL('E'):
 			if (win->scroll >= win->lines_count - 1) {
