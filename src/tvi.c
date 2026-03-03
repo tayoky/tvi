@@ -83,6 +83,11 @@ int insert_mode(tvi_t *tvi) {
 		int c = getchar();
 		if (c == '\033') break;
 		if (c == '\n') {
+			text_insert_newline(win, win->cursor_x, win->cursor_y);
+			win->cursor_y++;
+			win->cursor_x = 0;
+			render_window(tvi, win);
+			render_flush(tvi);
 			continue;
 		}
 		if (term_is_delete(c)) {
@@ -98,7 +103,8 @@ int insert_mode(tvi_t *tvi) {
 		text_insert_buf(win, win->cursor_x, win->cursor_y, &buf, 1);
 		win->cursor_x++;
 redraw:
-		render_window(tvi, win);
+		render_line(tvi, win, win->cursor_y-win->scroll);
+		render_status(tvi, win);
 		render_flush(tvi);
 	}
 

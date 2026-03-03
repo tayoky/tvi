@@ -14,7 +14,10 @@ void text_insert_lines(win_t *win, int addr, char *const*lines, size_t lines_cou
 }
 
 void text_insert_newline(win_t *win, int x, int y) {
-
+	char *line = win->text[y];
+	char *new_line = &line[x];
+	text_insert_lines(win, y+1, &new_line, 1);
+	line[x] = '\0';
 }
 
 void text_insert_buf(win_t *win, int x, int y, const char *buf, size_t count) {

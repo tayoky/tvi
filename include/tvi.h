@@ -54,6 +54,7 @@ void render_flush(tvi_t *tvi);
 win_t *win_create(tvi_t *tvi);
 void win_free(tvi_t *tvi, win_t *win);
 void text_insert_lines(win_t *win, int addr, char *const*lines, size_t lines_count);
+void text_insert_newline(win_t *win, int x, int y);
 void text_insert_buf(win_t *win, int x, int y, const char *buf, size_t count);
 void text_delete_buf(win_t *win, int x, int y, char *buf, size_t count);
 void text_delete(win_t *win, int x, int y, size_t count);
