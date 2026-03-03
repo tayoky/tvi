@@ -15,7 +15,10 @@ typedef struct win {
 	int scroll;
 	int flags;
 	char **text;
+	char **files;
 	int lines_count;
+	int files_count;
+	int file_index;
 } win_t;
 
 typedef struct tvi {
@@ -52,6 +55,9 @@ win_t *win_create(tvi_t *tvi);
 void win_free(tvi_t *tvi, win_t *win);
 void text_insert_lines(win_t *win, int addr, char *const*lines, size_t lines_count);
 int ex_command(tvi_t *tvi, const char *command);
+void open_files(win_t *win, char *const*files, size_t files_count);
+void read_file(win_t *win, const char *path);
+void free_list(char **list, size_t count);
 int tvi_main(tvi_t *tvi);
 int ex_main(tvi_t *tvi);
 void error(tvi_t *tvi, const char *fmt, ...);

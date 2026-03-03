@@ -98,9 +98,28 @@ static int ex_insert(tvi_t *tvi, ex_args_t *args) {
 	return 0;
 }
 
+static int ex_next(tvi_t *tvi, ex_args_t *args) {
+	(void)args;
+	win_t *win = tvi->focus_window;
+	if (win->files_count == 1) {
+		error(tvi, "there is only one file to edit");
+		return -1;
+	} else if (win->file_index + 1 >= win->files_count) {
+		error(tvi, "cannot go beyond last file");
+		return -1;
+	}
+
+	win->file_index++;
+	read_file(win, win->files[win->file_index]);
+	render_window(tvi, win);
+
+	return 0;
+}
+
 static ex_command_t commands[] = {
 	COMMAND("append", ex_append, FLAG_BANG, 1),
 	COMMAND("insert", ex_insert, FLAG_BANG, 1),
+	COMMAND("next", ex_next, FLAG_BANG, 0),
 	COMMAND("print", ex_print, 0, 2),
 	COMMAND("quit", ex_quit, FLAG_BANG, 0),
 	COMMAND(NULL, NULL, 0, 0),

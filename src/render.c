@@ -29,7 +29,10 @@ void render_status(tvi_t *tvi, win_t *win) {
 	int x = win->cursor_x;
 	size_t line_len = strlen(win->text[y]);
 	if ((size_t)x > line_len) x = line_len;
-	printf("[NO NAME] %d,%d", y+1, x+1);
+
+	const char *file = win->files[win->file_index];
+	if (!file) file = "[NO NAME]";
+	printf("%s %d,%d", file, y+1, x+1);
 }
 
 void render_window(tvi_t *tvi, win_t *win) {

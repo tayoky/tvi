@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
 	win_t *win = win_create(&tvi);
 	if (i < argc) {
 		// we have files to edit
-		// TODO : open them
+		open_files(win, &argv[i], argc-i);
 	}
 	if (tvi.mode == MODE_VISUAL) {
 		tvi_main(&tvi);
