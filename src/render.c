@@ -33,6 +33,8 @@ void render_status(tvi_t *tvi, win_t *win) {
 	const char *file = win->files[win->file_index];
 	if (!file) file = "[NO NAME]";
 	printf("%s %d,%d", file, y+1, x+1);
+	term_goto(win->x + win->width - 3, win->y + win->height - 1);
+	printf("tvi");
 }
 
 void render_window(tvi_t *tvi, win_t *win) {

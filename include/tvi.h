@@ -60,9 +60,11 @@ void text_delete_lines(win_t *win, int addr, size_t count);
 void text_delete_buf(win_t *win, int x, int y, char *buf, size_t count);
 void text_delete(win_t *win, int x, int y, size_t count);
 void text_join(win_t *win, int first, int last, char sep);
+void text_mark_dirty(win_t *win);
 int ex_command(tvi_t *tvi, const char *command);
 void open_files(win_t *win, char *const*files, size_t files_count);
 void read_file(win_t *win, const char *path);
+int write_file(tvi_t *tvi, win_t *win, const char *path, int first, int last);
 void free_list(char **list, size_t count);
 int tvi_main(tvi_t *tvi);
 int ex_main(tvi_t *tvi);
@@ -79,5 +81,6 @@ extern int term_height;
 #define MODE_EX       2
 #define FLAG_PROMPT   0x01 // when prompt is enabled
 #define FLAG_QUIT     0x02
+#define FLAG_DIRTY    0x04
 
 #endif

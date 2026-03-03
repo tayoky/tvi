@@ -35,3 +35,31 @@ void open_files(win_t *win, char *const*files, size_t files_count) {;
 	}
 	read_file(win, files[0]);
 }
+
+int write_file(tvi_t *tvi, win_t *win, const char *path, int first, int last) {
+	if (!path) {
+		path = win->files[win->file_index];
+	}
+	if (!path) {
+		error(tvi, "no file name");
+		return -1;
+	}
+	FILE *file = fopen(path, "w");
+	if (!file) {
+		error(tvi, "cannot open file '%s'", path);
+		return -1;
+	}
+
+	size_t bytes_count = 0;
+	size_t lines_count = 0;
+	for (int current=first; current<=last; current++) {
+		fprintf(file, "%s\n", win->text[current]);
+		bytes_count += strlen(win->text[current]) + 1;
+		lines_count++;
+	}
+
+	fclose(file);
+	print(tvi, "'%s' %zuL, %zuB written", path, lines_count, bytes_count);
+	win->flags &= ~FLAG_DIRTY;
+	return 0;
+}

@@ -3,8 +3,12 @@
 #include <tvi.h>
 
 // tools to manipulate text
+void text_mark_dirty(win_t *win) {
+	win->flags |= FLAG_DIRTY;
+}
 
 void text_insert_lines(win_t *win, int addr, char *const*lines, size_t lines_count) {
+	text_mark_dirty(win);
 	win->text = realloc(win->text, sizeof(char*) * (win->lines_count + lines_count));
 	memmove(&win->text[addr+lines_count], &win->text[addr], (win->lines_count-addr)*sizeof(char*));
 	win->lines_count += lines_count;
@@ -14,6 +18,7 @@ void text_insert_lines(win_t *win, int addr, char *const*lines, size_t lines_cou
 }
 
 void text_insert_newline(win_t *win, int x, int y) {
+	text_mark_dirty(win);
 	char *line = win->text[y];
 	char *new_line = &line[x];
 	text_insert_lines(win, y+1, &new_line, 1);
@@ -21,6 +26,7 @@ void text_insert_newline(win_t *win, int x, int y) {
 }
 
 void text_insert_buf(win_t *win, int x, int y, const char *buf, size_t count) {
+	text_mark_dirty(win);
 	char *line = win->text[y];
 	line = realloc(line, strlen(line) + 1 + count);
 	memmove(&line[x+count], &line[x], strlen(line) - x + 1);
@@ -29,6 +35,7 @@ void text_insert_buf(win_t *win, int x, int y, const char *buf, size_t count) {
 }
 
 void text_delete_buf(win_t *win, int x, int y, char *buf, size_t count) {
+	text_mark_dirty(win);
 	char *line = win->text[y];
 	if (buf) {
 		memcpy(buf, &line[x], count);
@@ -41,6 +48,7 @@ void text_delete(win_t *win, int x, int y, size_t count) {
 }
 
 void text_delete_lines(win_t *win, int addr, size_t count) {
+	text_mark_dirty(win);
 	memmove(&win->text[addr], &win->text[addr+count], (win->lines_count - addr - count) * sizeof(char*));
 	win->lines_count -= count;
 }

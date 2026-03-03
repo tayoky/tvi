@@ -8,6 +8,7 @@ typedef struct ex_args {
 	int addr1;
 	int addr2;
 	int flags;
+	int addrs_count;
 } ex_args_t;
 
 typedef struct ex_command {
@@ -55,8 +56,18 @@ static void free_input(char **lines, size_t lines_count) {
 	free(lines);
 }
 
+static int check_dirty(tvi_t *tvi, ex_args_t *args) {
+	if (args->flags & FLAG_BANG) return 0;
+	win_t *win = tvi->focus_window;
+	if (win->flags & FLAG_DIRTY) {
+		error(tvi, "no write since last change(add ! to override)");
+		return -1;
+	}
+	return 0;
+}
+
 static int ex_quit(tvi_t *tvi, ex_args_t *args) {
-	(void)args;
+	if (check_dirty(tvi, args) < 0) return -1;
 	tvi->flags |= FLAG_QUIT;
 	return 0;
 }
@@ -99,7 +110,7 @@ static int ex_insert(tvi_t *tvi, ex_args_t *args) {
 }
 
 static int ex_next(tvi_t *tvi, ex_args_t *args) {
-	(void)args;
+	if (check_dirty(tvi, args) < 0) return -1;
 	win_t *win = tvi->focus_window;
 	if (win->files_count == 1) {
 		error(tvi, "there is only one file to edit");
@@ -125,6 +136,19 @@ static int ex_join(tvi_t *tvi, ex_args_t *args) {
 	return 0;
 }
 
+static int ex_write(tvi_t *tvi, ex_args_t *args) {
+	if (args->addrs_count == 0) {
+		// by default write whole file
+		args->addr1 = 0;
+		args->addr2 = tvi->focus_window->lines_count - 1;
+	}
+	if ((args->addr1 != 0 || args->addr2 != tvi->focus_window->lines_count - 1) && !(args->flags & FLAG_BANG)) {
+		error(tvi, "use '!' to write partial buffer");
+		return -1;
+	}
+	return write_file(tvi, tvi->focus_window, NULL, args->addr1, args->addr2);
+}
+
 static ex_command_t commands[] = {
 	COMMAND("append", ex_append, FLAG_BANG, 1),
 	COMMAND("insert", ex_insert, FLAG_BANG, 1),
@@ -132,6 +156,7 @@ static ex_command_t commands[] = {
 	COMMAND("next", ex_next, FLAG_BANG, 0),
 	COMMAND("print", ex_print, 0, 2),
 	COMMAND("quit", ex_quit, FLAG_BANG, 0),
+	COMMAND("write", ex_write, FLAG_BANG, 2),
 	COMMAND(NULL, NULL, 0, 0),
 };
 
@@ -219,6 +244,7 @@ int ex_command(tvi_t *tvi, const char *command) {
 		}
 		break;
 	}
+	args.addrs_count = addrs_count;
 
 	// skip leading blank
 	while (is_blank(*command)) command++;
