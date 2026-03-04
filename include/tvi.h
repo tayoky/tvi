@@ -72,6 +72,7 @@ void text_delete(win_t *win, int x, int y, size_t count);
 void text_delete_reg(tvi_t *tvi, win_t *win, int x, int y, size_t count, int reg);
 void text_delete_lines(win_t *win, int addr, size_t count);
 void text_delete_lines_reg(tvi_t *tvi, win_t *win, int addr, size_t count, int reg);
+void text_yank_lines(tvi_t *tvi, win_t *win, int addr, size_t count, int reg);
 void text_join(win_t *win, int first, int last, char sep);
 void text_mark_dirty(win_t *win);
 void reg_write(tvi_t *tvi, int name, char *const*lines, size_t lines_count, int type);

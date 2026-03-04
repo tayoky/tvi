@@ -193,8 +193,8 @@ static int ex_xit(tvi_t *tvi, ex_args_t *args) {
 }
 
 static int ex_yank(tvi_t *tvi, ex_args_t *args) {
-	error(tvi, "TODO : yank");
-	return -1;
+	text_yank_lines(tvi, tvi->focus_window, args->addr1, args->addr2 - args->addr1 + 1, args->reg);
+	return 0;
 }
 
 static ex_command_t commands[] = {

@@ -81,3 +81,7 @@ void text_join(win_t *win, int first, int last, char sep) {
 	win->text[first] = line;
 	text_delete_lines(win, first+1, last-first);
 }
+
+void text_yank_lines(tvi_t *tvi, win_t *win, int addr, size_t count, int reg) {
+	reg_write(tvi, reg, &win->text[addr], count, REG_LINE);
+}
