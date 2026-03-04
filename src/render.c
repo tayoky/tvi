@@ -66,9 +66,18 @@ void render_cursor(tvi_t *tvi) {
 	win_t *win = tvi->focus_window;
 	int x = win->cursor_x;
 	int y = win->cursor_y;
-	size_t line_len = strlen(win->text[y]);
+	const char *line = win->text[y];
+	size_t line_len = strlen(line);
 	if ((size_t)x > line_len) x = line_len;
-	term_goto(win->x + x, win->y + y - win->scroll);
+	int screen_x = 0;
+	for (int i=0; i<x; i++) {
+		if (line[i] == '\t') {
+			screen_x += 8;
+		} else {
+			screen_x++;
+		}
+	}
+	term_goto(win->x + screen_x, win->y + y - win->scroll);
 }
 
 void render_prompt(tvi_t *tvi) {
