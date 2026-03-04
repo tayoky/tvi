@@ -9,6 +9,7 @@ typedef struct ex_args {
 	int addr2;
 	int flags;
 	int addrs_count;
+	int reg;
 } ex_args_t;
 
 typedef struct ex_command {
@@ -21,6 +22,7 @@ typedef struct ex_command {
 #define COMMAND(_name, _func, _flags, _max_addrs) {.name = _name, .func = _func, .flags = _flags, .max_addrs = _max_addrs}
 
 #define FLAG_BANG 0x01
+#define FLAG_REG  0x02
 
 static char **ex_input(tvi_t *tvi, size_t *_lines_count) {
 	size_t lines_count = 0;
@@ -78,6 +80,13 @@ static int ex_append(tvi_t *tvi, ex_args_t *args) {
 	return 0;
 }
 
+static int ex_delete(tvi_t *tvi, ex_args_t *args) {
+	text_delete_lines_reg(tvi, tvi->focus_window, args->addr1, args->addr2 - args->addr1 + 1, args->reg);
+	render_window(tvi, tvi->focus_window);
+	render_flush(tvi);
+	return 0;
+}
+
 static int ex_insert(tvi_t *tvi, ex_args_t *args) {
 	size_t lines_count;
 	char **lines = ex_input(tvi, &lines_count);
@@ -116,6 +125,11 @@ static int ex_print(tvi_t *tvi, ex_args_t *args) {
 		}
 	}
 	return 0;
+}
+
+static int ex_put(tvi_t *tvi, ex_args_t *args) {
+	error(tvi, "TODO : put");
+	return -1;
 }
 
 static int ex_quit(tvi_t *tvi, ex_args_t *args) {
@@ -178,17 +192,25 @@ static int ex_xit(tvi_t *tvi, ex_args_t *args) {
 	}
 }
 
+static int ex_yank(tvi_t *tvi, ex_args_t *args) {
+	error(tvi, "TODO : yank");
+	return -1;
+}
+
 static ex_command_t commands[] = {
 	COMMAND("append", ex_append, FLAG_BANG, 1),
+	COMMAND("delete", ex_delete, FLAG_REG, 2),
 	COMMAND("help", ex_help, 0, 0),
 	COMMAND("insert", ex_insert, FLAG_BANG, 1),
 	COMMAND("join", ex_join, FLAG_BANG, 2),
 	COMMAND("next", ex_next, FLAG_BANG, 0),
 	COMMAND("print", ex_print, 0, 2),
+	COMMAND("put", ex_put, FLAG_REG, 2),
 	COMMAND("quit", ex_quit, FLAG_BANG, 0),
 	COMMAND("write", ex_write, FLAG_BANG, 2),
 	COMMAND("wq", ex_wq, FLAG_BANG, 2),
 	COMMAND("xit", ex_xit, FLAG_BANG, 2),
+	COMMAND("yank", ex_yank, FLAG_REG, 2),
 	COMMAND(NULL, NULL, 0, 0),
 };
 
@@ -235,6 +257,7 @@ int ex_command(tvi_t *tvi, const char *command) {
 	ex_args_t args = {
 		.addr1 = win->cursor_y,
 		.addr2 = win->cursor_y,
+		.reg = '"',
 	};
 	int addrs_count = 0;
 
@@ -295,6 +318,7 @@ int ex_command(tvi_t *tvi, const char *command) {
 		command++;
 		args.flags |= FLAG_BANG;
 	}
+	
 	if (!name_len) {
 		if (!addrs_count || tvi->mode != MODE_VISUAL) {
 			return 0;
@@ -325,6 +349,14 @@ int ex_command(tvi_t *tvi, const char *command) {
 		if ((args.flags & FLAG_BANG) && !(commands[i].flags & FLAG_BANG)) {
 			error(tvi, "no '!' allowed");
 			return -1;
+		}
+		// parse reg
+		if (commands[i].flags & FLAG_REG) {
+			// skip leading blank
+			while (is_blank(*command)) command++;
+			if (*command) {
+				args.reg = *command;
+			}
 		}
 		return commands[i].func(tvi, &args);
 	}

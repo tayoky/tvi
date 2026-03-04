@@ -254,6 +254,19 @@ int tvi_main(tvi_t *tvi) {
 				c = getchar();
 			}
 		}
+
+		int buffer = '"';
+		if (c == '"') {
+			// we have a buffer
+			buffer = getchar();
+
+			// '"' is unammed
+			if (!isalpha(buffer) && !isdigit(buffer) && buffer != '_' && buffer != '"') {
+				// invalid buffer
+				term_bell();
+				continue;
+			}
+		}
 		win_t *win = tvi->focus_window;
 		size_t line_len = strlen(win->text[win->cursor_y]);
 		if (move_command(tvi, c, count)) {
@@ -295,6 +308,20 @@ int tvi_main(tvi_t *tvi) {
 			render_window(tvi, win);
 			render_flush(tvi);
 			break;
+		case 'p':
+			win->cursor_x++;
+			fix_cursor(tvi);
+			reg_put(tvi, win, buffer, win->cursor_x, win->cursor_y);
+			render_window(tvi, win);
+			render_flush(tvi);
+			break;
+		case 'P':
+			fix_cursor(tvi);
+			// TODO : put line before
+			reg_put(tvi, win, buffer, win->cursor_x, win->cursor_y);
+			render_window(tvi, win);
+			render_flush(tvi);
+			break;
 		case 'x':
 			fix_cursor(tvi);
 			if (!count) count = 1;
@@ -303,7 +330,7 @@ int tvi_main(tvi_t *tvi) {
 				break;
 			}
 			if ((size_t)count > line_len - win->cursor_x) count = line_len - win->cursor_x;
-			text_delete(win, win->cursor_x, win->cursor_y, count);
+			text_delete_reg(tvi, win, win->cursor_x, win->cursor_y, count, buffer);
 			render_line(tvi, win, win->cursor_y - win->scroll);
 			render_flush(tvi);
 			break;
@@ -316,7 +343,7 @@ int tvi_main(tvi_t *tvi) {
 			}
 			if (count > win->cursor_x) count = win->cursor_x;
 			win->cursor_x -= count;
-			text_delete(win, win->cursor_x, win->cursor_y, count);
+			text_delete_reg(tvi, win, win->cursor_x, win->cursor_y, count, buffer);
 			render_line(tvi, win, win->cursor_y - win->scroll);
 			render_flush(tvi);
 			break;

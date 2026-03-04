@@ -34,23 +34,31 @@ void text_insert_buf(win_t *win, int x, int y, const char *buf, size_t count) {
 	win->text[y] = line;
 }
 
-void text_delete_buf(win_t *win, int x, int y, char *buf, size_t count) {
+void text_delete_reg(tvi_t *tvi, win_t *win, int x, int y, size_t count, int reg) {
 	text_mark_dirty(win);
 	char *line = win->text[y];
-	if (buf) {
-		memcpy(buf, &line[x], count);
+	if (reg) {
+		char *buf = &line[x];
+		reg_write(tvi, reg, &buf, 1, REG_CHAR);
 	}
 	memmove(&line[x], &line[x+count], strlen(line) - x - count + 1);
 }
 
 void text_delete(win_t *win, int x, int y, size_t count) {
-	text_delete_buf(win, x, y, NULL, count);
+	text_delete_reg(NULL, win, x, y, count, 0);
+}
+
+void text_delete_lines_reg(tvi_t *tvi, win_t *win, int addr, size_t count, int reg) {
+	text_mark_dirty(win);
+	if (reg) {
+		reg_write(tvi, reg, &win->text[addr], count, REG_LINE);
+	}
+	memmove(&win->text[addr], &win->text[addr+count], (win->lines_count - addr - count) * sizeof(char*));
+	win->lines_count -= count;
 }
 
 void text_delete_lines(win_t *win, int addr, size_t count) {
-	text_mark_dirty(win);
-	memmove(&win->text[addr], &win->text[addr+count], (win->lines_count - addr - count) * sizeof(char*));
-	win->lines_count -= count;
+	text_delete_lines_reg(NULL, win, addr, count, 0);
 }
 
 void text_join(win_t *win, int first, int last, char sep) {

@@ -21,6 +21,15 @@ typedef struct win {
 	int file_index;
 } win_t;
 
+typedef struct reg {
+	char **text;
+	size_t lines_count;
+	int type;
+} reg_t;
+
+#define REG_CHAR 0
+#define REG_LINE 1
+
 typedef struct tvi {
 	int mode;
 	int flags;
@@ -29,6 +38,9 @@ typedef struct tvi {
 	size_t prompt_cursor;
 	win_t *focus_window;
 	win_t *first_window;
+	reg_t alpha_regs[26];
+	reg_t digit_regs[10];
+	reg_t unamed_reg;
 } tvi_t;
 
 int term_enable_raw_mode(void);
@@ -56,11 +68,14 @@ void win_free(tvi_t *tvi, win_t *win);
 void text_insert_lines(win_t *win, int addr, char *const*lines, size_t lines_count);
 void text_insert_newline(win_t *win, int x, int y);
 void text_insert_buf(win_t *win, int x, int y, const char *buf, size_t count);
-void text_delete_lines(win_t *win, int addr, size_t count);
-void text_delete_buf(win_t *win, int x, int y, char *buf, size_t count);
 void text_delete(win_t *win, int x, int y, size_t count);
+void text_delete_reg(tvi_t *tvi, win_t *win, int x, int y, size_t count, int reg);
+void text_delete_lines(win_t *win, int addr, size_t count);
+void text_delete_lines_reg(tvi_t *tvi, win_t *win, int addr, size_t count, int reg);
 void text_join(win_t *win, int first, int last, char sep);
 void text_mark_dirty(win_t *win);
+void reg_write(tvi_t *tvi, int name, char *const*lines, size_t lines_count, int type);
+void reg_put(tvi_t *tvi, win_t *win, int name, int x, int y);
 int ex_command(tvi_t *tvi, const char *command);
 void open_files(win_t *win, char *const*files, size_t files_count);
 void read_file(win_t *win, const char *path);
