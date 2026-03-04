@@ -10,7 +10,7 @@ SRC = $(shell find $(SRCDIR) -name "*.c")
 OBJ = $(SRC:$(SRCDIR)/%.c=$(BUILDDIR)/%.o)
 
 CFLAGS += -I$(INCLUDEDIR)
-CFLAGS += -DTASH_VERSION='"$(VERSION)"'
+CFLAGS += -DTVI_VERSION='"$(VERSION)"' -DPREFIX='"$(PREFIX)"'
 CFLAGS += --std=c99 -D_POSIX_C_SOURCE=200809L
 
 all : $(BUILDDIR)/tvi
@@ -30,11 +30,14 @@ $(BUILDDIR)/%.o : $(SRCDIR)/%.c
 
 install : all
 	@echo '[installing tvi]'
-	@mkdir -p $(PREFIX)/bin
-	@cp $(BUILDDIR)/tvi $(PREFIX)/bin/tvi
+	@mkdir -p $(DESTDIR)$(PREFIX)/bin
+	@cp $(BUILDDIR)/tvi $(DESTDIR)$(PREFIX)/bin/tvi
+	@echo '[installing manual]'
+	@mkdir -p $(DESTDIR)$(PREFIX)/share/tvi
+	@cp help.txt $(DESTDIR)$(PREFIX)/share/tvi
 
 uninstall :
-	rm -f $(PREFIX)/bin/tvi
+	rm -fr $(DESTDIR)$(PREFIX)/bin/tvi $(DESTDIR)$(PREFIX)/share/tvi
 
 clean :
 	rm -fr build

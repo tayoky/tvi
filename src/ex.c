@@ -90,6 +90,21 @@ static int ex_insert(tvi_t *tvi, ex_args_t *args) {
 	return 0;
 }
 
+static int ex_help(tvi_t *tvi, ex_args_t *args) {
+	(void)args;
+	static char *help_path = PREFIX"/share/tvi/help.txt";
+	win_t *old_win = tvi->focus_window;
+	win_t *win = win_create(tvi);
+	win->width = old_win->width;
+	win->height = old_win->height - 2;
+	win->x = old_win->x;
+	win->y = old_win->y;
+	open_files(win, &help_path, 1);
+	render_window(tvi, win);
+	render_flush(tvi);
+	return 0;
+}
+
 static int ex_print(tvi_t *tvi, ex_args_t *args) {
 	win_t *win = tvi->focus_window;
 	for (int line=args->addr1; line<=args->addr2; line++) {
@@ -165,6 +180,7 @@ static int ex_xit(tvi_t *tvi, ex_args_t *args) {
 
 static ex_command_t commands[] = {
 	COMMAND("append", ex_append, FLAG_BANG, 1),
+	COMMAND("help", ex_help, 0, 0),
 	COMMAND("insert", ex_insert, FLAG_BANG, 1),
 	COMMAND("join", ex_join, FLAG_BANG, 2),
 	COMMAND("next", ex_next, FLAG_BANG, 0),
