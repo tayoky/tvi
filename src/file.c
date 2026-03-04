@@ -18,6 +18,10 @@ empty:
 	size_t lines_count = 0;
 	win->text = NULL;
 	while (fgets(line, sizeof(line), file)) {
+		// strip the newline
+		if (line[strlen(line)-1] == '\n') {
+			line[strlen(line)-1] = '\0';
+		}
 		lines_count++;
 		win->text = realloc(win->text, sizeof(char*)*lines_count);
 		win->text[lines_count-1] = strdup(line);

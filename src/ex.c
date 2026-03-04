@@ -66,25 +66,6 @@ static int check_dirty(tvi_t *tvi, ex_args_t *args) {
 	return 0;
 }
 
-static int ex_quit(tvi_t *tvi, ex_args_t *args) {
-	if (check_dirty(tvi, args) < 0) return -1;
-	tvi->flags |= FLAG_QUIT;
-	return 0;
-}
-
-static int ex_print(tvi_t *tvi, ex_args_t *args) {
-	win_t *win = tvi->focus_window;
-	for (int line=args->addr1; line<=args->addr2; line++) {
-		const char *content = win->text[line];
-		if (line == args->addr2) {
-			print(tvi, "%s", content);
-		} else {
-			print(tvi, "%s\n", content);
-		}
-	}
-	return 0;
-}
-
 static int ex_append(tvi_t *tvi, ex_args_t *args) {
 	size_t lines_count;
 	char **lines = ex_input(tvi, &lines_count);
@@ -106,6 +87,25 @@ static int ex_insert(tvi_t *tvi, ex_args_t *args) {
 	render_window(tvi, tvi->focus_window);
 	render_flush(tvi);
 	free_input(lines, lines_count);
+	return 0;
+}
+
+static int ex_print(tvi_t *tvi, ex_args_t *args) {
+	win_t *win = tvi->focus_window;
+	for (int line=args->addr1; line<=args->addr2; line++) {
+		const char *content = win->text[line];
+		if (line == args->addr2) {
+			print(tvi, "%s", content);
+		} else {
+			print(tvi, "%s\n", content);
+		}
+	}
+	return 0;
+}
+
+static int ex_quit(tvi_t *tvi, ex_args_t *args) {
+	if (check_dirty(tvi, args) < 0) return -1;
+	tvi->flags |= FLAG_QUIT;
 	return 0;
 }
 
@@ -149,6 +149,20 @@ static int ex_write(tvi_t *tvi, ex_args_t *args) {
 	return write_file(tvi, tvi->focus_window, NULL, args->addr1, args->addr2);
 }
 
+static int ex_wq(tvi_t *tvi, ex_args_t *args) {
+	if (ex_write(tvi, args) < 0) return -1;
+	ex_args_t empty = {0};
+	return ex_quit(tvi, &empty);
+}
+
+static int ex_xit(tvi_t *tvi, ex_args_t *args) {
+	if (tvi->focus_window->flags & FLAG_DIRTY) {
+		return ex_wq(tvi, args);
+	} else {
+		return ex_quit(tvi, args);
+	}
+}
+
 static ex_command_t commands[] = {
 	COMMAND("append", ex_append, FLAG_BANG, 1),
 	COMMAND("insert", ex_insert, FLAG_BANG, 1),
@@ -157,6 +171,8 @@ static ex_command_t commands[] = {
 	COMMAND("print", ex_print, 0, 2),
 	COMMAND("quit", ex_quit, FLAG_BANG, 0),
 	COMMAND("write", ex_write, FLAG_BANG, 2),
+	COMMAND("wq", ex_wq, FLAG_BANG, 2),
+	COMMAND("xit", ex_xit, FLAG_BANG, 2),
 	COMMAND(NULL, NULL, 0, 0),
 };
 
