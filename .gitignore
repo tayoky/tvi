@@ -1,4 +1,3 @@
 build
 config.mk
-*.txt
 *.out

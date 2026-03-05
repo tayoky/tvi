@@ -1,0 +1,14 @@
+tvi's manual
+
+ex commands
+- append
+- delete
+- insert
+- join
+- next
+- print
+- quit
+- write
+- wq
+- xit
+- yank
