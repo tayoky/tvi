@@ -12,16 +12,7 @@ int prompt(tvi_t *tvi, const char *initial, int newline) {
 	render_flush(tvi);
 
 	for (;;) {
-		int c = getchar();
-		if (c == '\033') {
-exit_prompt:
-			tvi->prompt_len = 0;
-			tvi->flags &= ~FLAG_PROMPT;
-			render_prompt(tvi);
-			render_flush(tvi);
-			return -1;
-		}
-
+		int c = term_get_key();
 		if (term_is_delete(c)) {
 			if (tvi->prompt_len <= strlen(initial)) {
 				// exit prompt when it become empty
@@ -35,6 +26,43 @@ exit_prompt:
 			memmove(&tvi->prompt[tvi->prompt_cursor], &tvi->prompt[tvi->prompt_cursor+1], tvi->prompt_len - tvi->prompt_cursor);
 			tvi->prompt_len--;
 			render_prompt(tvi);
+			render_flush(tvi);
+			continue;
+		}
+		switch (c) {
+		case '\033':
+exit_prompt:
+			tvi->prompt_len = 0;
+			tvi->flags &= ~FLAG_PROMPT;
+			render_prompt(tvi);
+			render_flush(tvi);
+			return -1;
+		case KEY_LEFT:
+			if (tvi->prompt_cursor <= 0) {
+				term_bell();
+				continue;
+			}
+			tvi->prompt_cursor--;
+			render_flush(tvi);
+			continue;
+		case KEY_RIGHT:
+			if (tvi->prompt_cursor >= strlen(tvi->prompt)) {
+				term_bell();
+				continue;
+			}
+			tvi->prompt_cursor++;
+			render_flush(tvi);
+			continue;
+		case KEY_UP:
+		case KEY_DOWN:
+			term_bell();
+			continue;
+		case KEY_START:
+			tvi->prompt_cursor = strlen(initial);
+			render_flush(tvi);
+			continue;
+		case KEY_END:
+			tvi->prompt_cursor = strlen(tvi->prompt);
 			render_flush(tvi);
 			continue;
 		}
@@ -80,16 +108,8 @@ int insert_mode(tvi_t *tvi) {
 	win_t *win = tvi->focus_window;
 
 	for (;;) {
-		int c = getchar();
+		int c = term_get_key();
 		if (c == '\033') break;
-		if (c == '\n') {
-			text_insert_newline(win, win->cursor_x, win->cursor_y);
-			win->cursor_y++;
-			win->cursor_x = 0;
-			render_window(tvi, win);
-			render_flush(tvi);
-			continue;
-		}
 		if (term_is_delete(c)) {
 			if (win->cursor_x == 0) {
 				if (win->cursor_y <= 0) {
@@ -106,6 +126,35 @@ int insert_mode(tvi_t *tvi) {
 			win->cursor_x--;
 			text_delete(win, win->cursor_x, win->cursor_y, 1);
 			goto redraw;
+		}
+		switch (c){
+		case '\n':
+			text_insert_newline(win, win->cursor_x, win->cursor_y);
+			win->cursor_y++;
+			win->cursor_x = 0;
+			render_window(tvi, win);
+			render_flush(tvi);
+			continue;
+		case CRTL('V'):
+			// bypass interpret and term key
+			c = getchar();
+			break;
+		case KEY_LEFT:
+			if (win->cursor_x <= 0) {
+				term_bell();
+			} else {
+				win->cursor_x--;
+			}
+			render_flush(tvi);
+			continue;
+		case KEY_RIGHT:
+			if ((size_t)win->cursor_x >= strlen(win->text[win->cursor_y])) {
+				term_bell();
+			} else {
+				win->cursor_x++;
+			}
+			render_flush(tvi);
+			continue;
 		}
 		char buf = (unsigned char)c;
 		text_insert_buf(win, win->cursor_x, win->cursor_y, &buf, 1);
