@@ -312,14 +312,13 @@ int tvi_main(tvi_t *tvi) {
 		case 'p':
 			win->cursor_x++;
 			fix_cursor(tvi);
-			reg_put(tvi, win, buffer, win->cursor_x, win->cursor_y);
+			reg_put(tvi, win, buffer, win->cursor_x, win->cursor_y, 1);
 			render_window(tvi, win);
 			render_flush(tvi);
 			break;
 		case 'P':
 			fix_cursor(tvi);
-			// TODO : put line before
-			reg_put(tvi, win, buffer, win->cursor_x, win->cursor_y);
+			reg_put(tvi, win, buffer, win->cursor_x, win->cursor_y, 0);
 			render_window(tvi, win);
 			render_flush(tvi);
 			break;

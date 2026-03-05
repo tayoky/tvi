@@ -85,16 +85,20 @@ static reg_t *get_reg(tvi_t *tvi, int name) {
 	return reg;
 }
 
-int reg_put(tvi_t *tvi, win_t *win, int name, int x, int y) {
+int reg_put(tvi_t *tvi, win_t *win, int name, int x, int y, int after) {
 	reg_t *reg = get_reg(tvi, name);
 	if (!reg) return -1;
 
 	switch (reg->type) {
 	case REG_CHAR:
 		text_insert_buf(win, x, y, reg->text[0], strlen(reg->text[0]));
+		win->cursor_y = y;
+		win->cursor_x = x + strlen(reg->text[0]) - 1;
 		break;
 	case REG_LINE:
+		if (after) y++;
 		text_insert_lines(win, y, reg->text, reg->lines_count);
+		win->cursor_y = y + reg->lines_count - 1;
 		break;
 	}
 	return 0;
@@ -105,5 +109,6 @@ int reg_put_lines(tvi_t *tvi, win_t *win, int name, int addr) {
 	if (!reg) return -1;
 
 	text_insert_lines(win, addr, reg->text, reg->lines_count);
+	win->cursor_y = addr + reg->lines_count - 1;
 	return 0;
 }

@@ -76,7 +76,7 @@ void text_yank_lines(tvi_t *tvi, win_t *win, int addr, size_t count, int reg);
 void text_join(win_t *win, int first, int last, char sep);
 void text_mark_dirty(win_t *win);
 void reg_write(tvi_t *tvi, int name, char *const*lines, size_t lines_count, int type);
-int reg_put(tvi_t *tvi, win_t *win, int name, int x, int y);
+int reg_put(tvi_t *tvi, win_t *win, int name, int x, int y, int after);
 int reg_put_lines(tvi_t *tvi, win_t *win, int name, int addr);
 int ex_command(tvi_t *tvi, const char *command);
 void open_files(win_t *win, char *const*files, size_t files_count);
