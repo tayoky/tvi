@@ -3,21 +3,74 @@
 #include <tvi.h>
 
 void render_text(tvi_t *tvi, win_t *win) {
-	for (int i=0; i<win->height; i++) {
-		render_line(tvi, win, i);
+	for (int i=0; i<win->height-1; i++) {
+		if (render_line(tvi, win, win->scroll + i) < 0) break;
 	}
 }
 
-void render_line(tvi_t *tvi, win_t *win, int y) {
+static size_t render_len(const char *str) {
+	size_t len = 0;
+	while (*str) {
+		if (*str == '\t') {
+			len += 8;
+		} else {
+			len++;
+		}
+		str++;
+	}
+	return len;
+}
+
+static size_t get_line_height(win_t *win, const char *line) {
+	size_t line_len = render_len(line);
+	size_t lines_count = (line_len + win->width - 1) / win->width;
+	if (lines_count == 0) lines_count = 1;
+	return lines_count;
+}
+
+static int get_line_y(win_t *win, int index) {
+	int y = 0;
+	for (int i=win->scroll; i<index ;i++) {
+		if (i >= win->lines_count) {
+			y++;
+			continue;
+		}
+		char *line = win->text[i];
+		y += get_line_height(win, line);
+	}
+	return y;
+}
+
+int render_line(tvi_t *tvi, win_t *win, size_t index) {
 	(void)tvi;
+	if (index < (size_t)win->scroll) return -1;
+	int y = get_line_y(win, index);
+	if (y >= win->height - 1) {
+		return -1;
+	}
 	term_goto(win->x, win->y + y);
 	term_reset_color();
 	term_clear_line();
-	if (y + win->scroll >= (int)win->lines_count) {
+	if (index >= (size_t)win->lines_count) {
 		printf("~");
-	} else {
-		printf("%s", win->text[y + win->scroll]);
+		return 0;
 	}
+	char *line = win->text[index];
+	size_t line_height = get_line_height(win, line);
+	if (y + line_height > (size_t)win->height - 1) {
+		printf("@@@");
+	} else {
+		// clear multiple lines if needed
+		if (line_height > 1) {
+			for (size_t i=1; i<line_height; i++) {
+				putchar('\n');
+				term_clear_line();
+			}
+			term_goto(win->x, win->y + y);
+		}
+		printf("%s", line);
+	}
+	return 0;
 }
 
 void render_status(tvi_t *tvi, win_t *win) {
@@ -77,7 +130,8 @@ void render_cursor(tvi_t *tvi) {
 			screen_x++;
 		}
 	}
-	term_goto(win->x + screen_x, win->y + y - win->scroll);
+	int screen_y = get_line_y(win, y);
+	term_goto(win->x + screen_x, win->y + screen_y);
 }
 
 void render_prompt(tvi_t *tvi) {

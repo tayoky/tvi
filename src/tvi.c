@@ -160,7 +160,7 @@ int insert_mode(tvi_t *tvi) {
 		text_insert_buf(win, win->cursor_x, win->cursor_y, &buf, 1);
 		win->cursor_x++;
 redraw:
-		render_line(tvi, win, win->cursor_y-win->scroll);
+		render_line(tvi, win, win->cursor_y);
 		render_status(tvi, win);
 		render_flush(tvi);
 	}
@@ -406,7 +406,7 @@ int tvi_main(tvi_t *tvi) {
 			}
 			if ((size_t)count > line_len - win->cursor_x) count = line_len - win->cursor_x;
 			text_delete_reg(tvi, win, win->cursor_x, win->cursor_y, count, buffer);
-			render_line(tvi, win, win->cursor_y - win->scroll);
+			render_line(tvi, win, win->cursor_y);
 			render_flush(tvi);
 			break;
 		case 'X':
@@ -419,7 +419,7 @@ int tvi_main(tvi_t *tvi) {
 			if (count > win->cursor_x) count = win->cursor_x;
 			win->cursor_x -= count;
 			text_delete_reg(tvi, win, win->cursor_x, win->cursor_y, count, buffer);
-			render_line(tvi, win, win->cursor_y - win->scroll);
+			render_line(tvi, win, win->cursor_y);
 			render_flush(tvi);
 			break;
 		case CRTL('E'):

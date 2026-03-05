@@ -57,7 +57,7 @@ void term_reset_color(void);
 void term_inverse_color(void);
 void term_error_color(void);
 void render_text(tvi_t *tvi, win_t *win);
-void render_line(tvi_t *tvi, win_t *win, int y);
+int render_line(tvi_t *tvi, win_t *win, size_t index);
 void render_status(tvi_t *tvi, win_t *win);
 void render_window(tvi_t *tvi, win_t *win);
 void render_all_windows(tvi_t *tvi);
