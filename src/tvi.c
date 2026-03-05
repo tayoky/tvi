@@ -266,6 +266,7 @@ int tvi_main(tvi_t *tvi) {
 				term_bell();
 				continue;
 			}
+			c = getchar();
 		}
 		win_t *win = tvi->focus_window;
 		size_t line_len = strlen(win->text[win->cursor_y]);

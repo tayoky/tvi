@@ -39,7 +39,7 @@ void text_delete_reg(tvi_t *tvi, win_t *win, int x, int y, size_t count, int reg
 	char *line = win->text[y];
 	if (reg) {
 		char *buf = &line[x];
-		reg_write(tvi, reg, &buf, 1, REG_CHAR);
+		reg_write(tvi, reg, &buf, count, REG_CHAR);
 	}
 	memmove(&line[x], &line[x+count], strlen(line) - x - count + 1);
 }

@@ -128,8 +128,10 @@ static int ex_print(tvi_t *tvi, ex_args_t *args) {
 }
 
 static int ex_put(tvi_t *tvi, ex_args_t *args) {
-	error(tvi, "TODO : put");
-	return -1;
+	if (reg_put_lines(tvi, tvi->focus_window, args->reg, args->addr1 + 1) < 0) return -1;
+	render_window(tvi, tvi->focus_window);
+	render_flush(tvi);
+	return 0;
 }
 
 static int ex_quit(tvi_t *tvi, ex_args_t *args) {
@@ -205,7 +207,7 @@ static ex_command_t commands[] = {
 	COMMAND("join", ex_join, FLAG_BANG, 2),
 	COMMAND("next", ex_next, FLAG_BANG, 0),
 	COMMAND("print", ex_print, 0, 2),
-	COMMAND("put", ex_put, FLAG_REG, 2),
+	COMMAND("put", ex_put, FLAG_REG, 1),
 	COMMAND("quit", ex_quit, FLAG_BANG, 0),
 	COMMAND("write", ex_write, FLAG_BANG, 2),
 	COMMAND("wq", ex_wq, FLAG_BANG, 2),

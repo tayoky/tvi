@@ -67,8 +67,8 @@ void reg_write(tvi_t *tvi, int name, char *const*lines, size_t count, int type) 
 	}
 }
 
-void reg_put(tvi_t *tvi, win_t *win, int name, int x, int y) {
-	if (name == '_') return;
+static reg_t *get_reg(tvi_t *tvi, int name) {
+	if (name == '_') return NULL;
 	reg_t *reg = NULL;
 	if (isalpha(name)) {
 		reg = &tvi->alpha_regs[tolower(name)-'a'];
@@ -77,11 +77,17 @@ void reg_put(tvi_t *tvi, win_t *win, int name, int x, int y) {
 	} else if (name == '"') {
 		reg = &tvi->unamed_reg;
 	}
-	if (!reg) return;
+	if (!reg) return NULL;
 	if (!reg->text) {
 		error(tvi, "nothing in register %c", name);
-		return;
+		return NULL;
 	}
+	return reg;
+}
+
+int reg_put(tvi_t *tvi, win_t *win, int name, int x, int y) {
+	reg_t *reg = get_reg(tvi, name);
+	if (!reg) return -1;
 
 	switch (reg->type) {
 	case REG_CHAR:
@@ -91,4 +97,13 @@ void reg_put(tvi_t *tvi, win_t *win, int name, int x, int y) {
 		text_insert_lines(win, y, reg->text, reg->lines_count);
 		break;
 	}
+	return 0;
+}
+
+int reg_put_lines(tvi_t *tvi, win_t *win, int name, int addr) {
+	reg_t *reg = get_reg(tvi, name);
+	if (!reg) return -1;
+
+	text_insert_lines(win, addr, reg->text, reg->lines_count);
+	return 0;
 }
