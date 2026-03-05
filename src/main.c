@@ -2,11 +2,12 @@
 #include <stdlib.h>
 #include <tvi.h>
 
+tvi_t tvi = {
+	.mode = MODE_VISUAL,
+};
+
 int main(int argc, char **argv) {
 	int i=1;
-	tvi_t tvi = {
-		.mode = MODE_VISUAL,
-	};
 	for (;i<argc;i++) {
 		if (argv[i][0] != '-') break;
 		if (argv[i][1] == '-') {
@@ -37,6 +38,7 @@ int main(int argc, char **argv) {
 		// we have files to edit
 		open_files(win, &argv[i], argc-i);
 	}
+	signal_install_handlers();
 	if (tvi.mode == MODE_VISUAL) {
 		tvi_main(&tvi);
 	} else {

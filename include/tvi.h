@@ -90,9 +90,11 @@ void error(tvi_t *tvi, const char *fmt, ...);
 void print(tvi_t *tvi, const char *fmt, ...);
 int prompt(tvi_t *tvi, const char *initial, int newline);
 void cursor_to_non_blank(win_t *win);
+void signal_install_handlers(void);
 
 extern int term_width;
 extern int term_height;
+extern tvi_t tvi;
 
 #define ESC "\033"
 #define CRTL(c) (c - 'A' + 1)

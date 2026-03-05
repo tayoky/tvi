@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <string.h>
 #include <stdio.h>
 #include <tvi.h>
 
@@ -138,7 +139,9 @@ void render_prompt(tvi_t *tvi) {
 	term_goto(0, term_height-1);
 	term_reset_color();
 	term_clear_line();
-	printf("%.*s", (int)tvi->prompt_len, tvi->prompt);
+	if (tvi->flags & FLAG_PROMPT) {
+		printf("%.*s", (int)tvi->prompt_len, tvi->prompt);
+	}
 }
 
 void render_flush(tvi_t *tvi) {
