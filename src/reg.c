@@ -99,6 +99,7 @@ int reg_put(tvi_t *tvi, win_t *win, int name, int x, int y, int after) {
 		if (after) y++;
 		text_insert_lines(win, y, reg->text, reg->lines_count);
 		win->cursor_y = y + reg->lines_count - 1;
+		cursor_to_non_blank(win);
 		break;
 	}
 	return 0;
@@ -110,5 +111,6 @@ int reg_put_lines(tvi_t *tvi, win_t *win, int name, int addr) {
 
 	text_insert_lines(win, addr, reg->text, reg->lines_count);
 	win->cursor_y = addr + reg->lines_count - 1;
+	cursor_to_non_blank(win);
 	return 0;
 }

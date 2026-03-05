@@ -45,6 +45,7 @@ typedef struct tvi {
 
 int term_enable_raw_mode(void);
 void term_quit_raw_mode(void);
+int term_get_key(void);
 int term_enter_fullscreen(void);
 void term_exit_fullscreen(void);
 void term_clear_line(void);
@@ -88,6 +89,7 @@ int ex_main(tvi_t *tvi);
 void error(tvi_t *tvi, const char *fmt, ...);
 void print(tvi_t *tvi, const char *fmt, ...);
 int prompt(tvi_t *tvi, const char *initial, int newline);
+void cursor_to_non_blank(win_t *win);
 
 extern int term_width;
 extern int term_height;
@@ -99,5 +101,13 @@ extern int term_height;
 #define FLAG_PROMPT   0x01 // when prompt is enabled
 #define FLAG_QUIT     0x02
 #define FLAG_DIRTY    0x04
+
+
+#define KEY_UP    -2
+#define KEY_DOWN  -3
+#define KEY_RIGHT -4
+#define KEY_LEFT  -5
+#define KEY_START -6
+#define KEY_END   -7
 
 #endif

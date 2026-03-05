@@ -123,9 +123,29 @@ redraw:
 	return 0;
 }
 
+void scroll_set(tvi_t *tvi, win_t *win, int scroll) {
+	win->scroll = scroll;
+	render_window(tvi, win);
+	render_flush(tvi);
+}
+
+void cursor_set_y(win_t *win, int y) {
+	win->cursor_y = y;
+	if (y - 3 < win->scroll) {
+		if (y > 3) {
+			win->scroll = y - 3;
+		} else {
+			win->scroll = 0;
+		}
+	}
+}
+
+void cursor_add_y(win_t *win, int y) {
+	cursor_set_y(win, win->cursor_y + y);
+}
+
 // set cursor to first non blank char on the line
-static void cursor_to_non_blank(tvi_t *tvi) {
-	win_t *win = tvi->focus_window;
+void cursor_to_non_blank(win_t *win) {
 	int x = 0;
 	const char *line = win->text[win->cursor_y];
 	while (isblank(line[x])) {
@@ -149,10 +169,11 @@ static int move_command(tvi_t *tvi, int c, int count) {
 
 	switch (c) {
 	case '^':
-		cursor_to_non_blank(tvi);
+		cursor_to_non_blank(win);
 		return 1;
 	case 'h':
 	case CRTL('H'):
+	case KEY_LEFT:
 backward:
 		fix_cursor(tvi);
 		if (win->cursor_x <= 0) {
@@ -168,29 +189,32 @@ backward:
 	case 'j':
 	case '\r':
 	case '+':
+	case KEY_DOWN:
 		if (win->lines_count - 1 <= win->cursor_y) {
 			term_bell();
 		} else if (win->lines_count - win->cursor_y - 1 < count) {
-			win->cursor_y = win->lines_count-1;
+			cursor_set_y(win, win->lines_count-1);
 		} else {
-			win->cursor_y += count;
+			cursor_add_y(win, count);
 		}
 		// TODO : change cursor x
 		return 1;
 	case CRTL('P'):
 	case 'k':
 	case '-':
+	case KEY_UP:
 		if (win->cursor_y <= 0) {
 			term_bell();
 		} else if (win->cursor_y < count) {
-			win->cursor_y = 0;
+			cursor_set_y(win, 0);
 		} else {
-			win->cursor_y -= count;
+			cursor_add_y(win, -count);
 		}
 		// TODO : change cursor x
 		return 1;
 	case ' ':
 	case 'l':
+	case KEY_RIGHT:
 		if (line_len <= win->cursor_x) {
 			term_bell();
 		} else if (line_len - win->cursor_x < count) {
@@ -200,18 +224,20 @@ backward:
 		}
 		return 1;
 	case '$':
+	case KEY_END:
 		if (count) {
 			if (win->lines_count >= win->cursor_y) {
 				term_bell();
 			} else if (win->lines_count - win->cursor_y < count-1) {
-				win->cursor_y = win->lines_count;
+				cursor_set_y(win, win->lines_count);
 			} else {
-				win->cursor_y += count-1;
+				cursor_add_y(win, count-1);
 			}
 		}
 		win->cursor_x = INT_MAX;
 		return 1;
 	case '0':
+	case KEY_START:
 		win->cursor_x = 0;
 		return 1;
 	case 'G':
@@ -223,8 +249,8 @@ backward:
 		} else {
 			count = win->lines_count-1;
 		}
-		win->cursor_y = count;
-		cursor_to_non_blank(tvi);
+		cursor_set_y(win, count);
+		cursor_to_non_blank(win);
 		return 1;
 	default:
 		return 0;
@@ -243,7 +269,7 @@ int tvi_main(tvi_t *tvi) {
 	render_window(tvi, win);
 	render_flush(tvi);
 	while (!(tvi->flags & FLAG_QUIT)) {
-		int c = getchar();
+		int c = term_get_key();
 		int count = 0;
 
 		if (isdigit(c) && c != '0') {
@@ -251,14 +277,14 @@ int tvi_main(tvi_t *tvi) {
 			while (isdigit(c)) {
 				count = c - '0';
 				c *= 10;
-				c = getchar();
+				c = term_get_key();
 			}
 		}
 
 		int buffer = '"';
 		if (c == '"') {
 			// we have a buffer
-			buffer = getchar();
+			buffer = term_get_key();
 
 			// '"' is unammed
 			if (!isalpha(buffer) && !isdigit(buffer) && buffer != '_' && buffer != '"') {
@@ -266,7 +292,7 @@ int tvi_main(tvi_t *tvi) {
 				term_bell();
 				continue;
 			}
-			c = getchar();
+			c = term_get_key();
 		}
 		win_t *win = tvi->focus_window;
 		size_t line_len = strlen(win->text[win->cursor_y]);
@@ -293,7 +319,7 @@ int tvi_main(tvi_t *tvi) {
 			insert_mode(tvi);
 			break;
 		case 'I':
-			cursor_to_non_blank(tvi);
+			cursor_to_non_blank(win);
 			insert_mode(tvi);
 			break;
 		case 'J':
@@ -354,6 +380,10 @@ int tvi_main(tvi_t *tvi) {
 			}
 			win->scroll++;
 			render_window(tvi, win);
+			render_flush(tvi);
+			break;
+		case CRTL('L'):
+			render_all_windows(tvi);
 			render_flush(tvi);
 			break;
 		case CRTL('Y'):
