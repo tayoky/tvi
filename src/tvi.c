@@ -173,19 +173,25 @@ redraw:
 	return 0;
 }
 
-void scroll_set(tvi_t *tvi, win_t *win, int scroll) {
+void scroll_set(win_t *win, int scroll) {
 	win->scroll = scroll;
-	render_window(tvi, win);
-	render_flush(tvi);
+	render_window(&tvi, win);
+	render_flush(&tvi);
 }
 
 void cursor_set_y(win_t *win, int y) {
 	win->cursor_y = y;
 	if (y - 3 < win->scroll) {
 		if (y > 3) {
-			win->scroll = y - 3;
+			scroll_set(win, y - 3);
 		} else {
-			win->scroll = 0;
+			scroll_set(win, 0);
+		}
+	} else if (y + 3 >= win->scroll + win->height - 1) {
+		if (y + 3 > win->lines_count) {
+			scroll_set(win, win->lines_count-win->height+2);
+		} else {
+			scroll_set(win, y + 3 - win->height + 1);
 		}
 	}
 }
@@ -395,6 +401,7 @@ int tvi_main(tvi_t *tvi) {
 		case 'P':
 			fix_cursor(tvi);
 			reg_put(tvi, win, buffer, win->cursor_x, win->cursor_y, 0);
+		tvi->first_window->width = term_width;
 			render_window(tvi, win);
 			render_flush(tvi);
 			break;
