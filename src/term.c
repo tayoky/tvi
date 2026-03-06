@@ -1,4 +1,6 @@
+#ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
+#endif
 #ifdef HAVE_TERMIOS_H
 #include <termios.h>
 #endif
@@ -17,9 +19,15 @@ int term_width;
 int term_height;
 
 void term_fetch_size(void) {
+#if defined(HAVE_SYS_IOCTL_H) && defined(TIOCGWINSZ)
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &winsz);
 	term_width = winsz.ws_col;
 	term_height = winsz.ws_row;
+#else
+	// just blindly guess terminal size
+	term_width = 80;
+	term_height = 25;
+#endif
 }
 
 int term_enable_raw_mode(void) {

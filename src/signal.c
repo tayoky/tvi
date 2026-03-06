@@ -1,5 +1,6 @@
-#include <signal.h>
 #include <tvi.h>
+#ifdef HAVE_SIGNAL_H
+#include <signal.h>
 
 void sigint_handler(int signum) {
 	(void)signum;
@@ -24,3 +25,7 @@ void signal_install_handlers(void) {
 	signal(SIGINT, sigint_handler);
 	signal(SIGWINCH, sigwinch_handler);
 }
+#else
+void signal_install_handlers(void) {
+}
+#endif

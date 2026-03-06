@@ -83,7 +83,7 @@ tconf_fini () {
 }
 
 tconf_uppercase () {
-	echo "$@" | tr [:lower:]. [:upper:]_
+	echo "$@" | tr [:lower:]./ [:upper:]__
 }
 
 tconf_require () {
@@ -104,6 +104,7 @@ tconf_check_code () {
 	fi
 
 	FILE="$TCONF_DIR/check-$2.c"
+	mkdir -p "$(dirname "$FILE")"
 
 	tconf_print -n "check $2... "
 	

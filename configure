@@ -11,5 +11,8 @@ tconf_require_header "$CC" stddef.h
 tconf_require_header "$CC" string.h
 tconf_check_header "$CC" poll.h
 tconf_check_header "$CC" termios.h
+tconf_check_header "$CC" unistd.h
+tconf_check_header "$CC" signal.h
+tconf_check_header "$CC" sys/ioctl.h
 
 tconf_fini
