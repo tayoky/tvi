@@ -1,12 +1,18 @@
 #include <sys/ioctl.h>
+#ifdef HAVE_TERMIOS_H
 #include <termios.h>
+#endif
 #include <unistd.h>
 #include <stdio.h>
+#ifdef HAVE_POLL_H
 #include <poll.h>
+#endif
 #include <tvi.h>
 
+#ifdef HAVE_TERMIOS_H
 static struct termios old;
 static struct winsize winsz;
+#endif
 int term_width;
 int term_height;
 
@@ -17,6 +23,7 @@ void term_fetch_size(void) {
 }
 
 int term_enable_raw_mode(void) {
+#ifdef HAVE_TERMIOS_H // without termios it will be probably broken but we can try
 	// save old termios
 	if(tcgetattr(STDIN_FILENO, &old) < 0){
 		perror("tcgetattr");
@@ -28,6 +35,7 @@ int term_enable_raw_mode(void) {
 		perror("tcsetattr");
 		return -1;
 	}
+#endif
 
 	// disable buffering
 	setvbuf(stdin, NULL, _IONBF, 0);;
@@ -35,19 +43,25 @@ int term_enable_raw_mode(void) {
 }
 
 void term_quit_raw_mode(void) {
+#ifdef HAVE_TERMIOS_H
 	// restore old termios
 	if(tcsetattr(STDIN_FILENO, TCSANOW, &old) < 0){
 		perror("tcsetattr");
 	}
+#endif
 }
 
 int term_have_input(void) {
+#ifdef HAVE_POLL_H
 	struct pollfd fd = {
 		.fd = STDIN_FILENO,
 		.events = POLLIN,
 	};
 	if (poll(&fd, 1, 0) < 0) return 0;
 	return fd.revents & POLLIN;
+#else
+	return 0;
+#endif
 }
 
 int term_get_key(void) {
@@ -105,7 +119,11 @@ void term_bell(void) {
 }
 
 int term_is_delete(int c) {
+#ifdef HAVE_TERMIOS_H
 	return c == old.c_cc[VERASE];
+#else
+	return c == '\b' || c == 0x7f;
+#endif
 }
 
 void term_reset_color(void) {
