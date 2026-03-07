@@ -3,16 +3,23 @@
 
 tconf_init "$@"
 
-tconf_search_cc ""
+tconf_search_cc "$HOST"
 tconf_require "C compiler" "$CC"
 tconf_require_header "$CC" stdio.h
 tconf_require_header "$CC" stdlib.h
 tconf_require_header "$CC" stddef.h
+tconf_require_header "$CC" stdarg.h
+tconf_require_header "$CC" ctype.h
 tconf_require_header "$CC" string.h
+tconf_require_header "$CC" limits.h
 tconf_check_header "$CC" poll.h
 tconf_check_header "$CC" termios.h
 tconf_check_header "$CC" unistd.h
 tconf_check_header "$CC" signal.h
 tconf_check_header "$CC" sys/ioctl.h
+
+# check functions
+tconf_check_code "$CC" "isatty" "#include<unistd.h>
+void func(){ isatty(0); }"
 
 tconf_fini

@@ -48,6 +48,21 @@ tconf_init () {
 		--cflags=*|CFLAGS=*)
 			CFLAGS="${i#*=}"
 			;;
+		--ldflags=*|LDFLAGS=*)
+			LDFLAGS="${i#*=}"
+			;;
+		--asflags=*|ASFLAGS=*)
+			ASFLAGS="${i#*=}"
+			;;
+		--host=*|HOST=*)
+			HOST="${i#*=}"
+			;;
+		--build=*|BUILD=*)
+			BUILD="${i#*=}"
+			;;
+		--debug)
+			OPT="$OPT -DDEBUG=1"
+			;;
 		--help)
 			tconf_help
 			exit 0
@@ -83,7 +98,7 @@ tconf_fini () {
 }
 
 tconf_uppercase () {
-	echo "$@" | tr [:lower:]./ [:upper:]__
+	echo "$@" | tr a-z./ A-Z__
 }
 
 tconf_require () {
@@ -111,12 +126,14 @@ tconf_check_code () {
 	# check if we aready checked this
 	if test -f "$FILE.o" ; then
 		tconf_print "yes(cached)"
+		OPT="$OPT -DHAVE_$(tconf_uppercase "$2")=1"
 		return 0
 	fi
 
 	echo "$3" > "$FILE"
 	if $1 -c "$FILE" -o "$FILE.o" >/dev/null 2>/dev/null ; then
 		tconf_print "yes"
+		OPT="$OPT -DHAVE_$(tconf_uppercase "$2")=1"
 		return 0
 	else
 		tconf_print "no"
@@ -130,12 +147,7 @@ tconf_check_header () {
 		return 1
 	fi
 
-	if tconf_check_code $1 "$2" "#include <$2>" ; then
-		OPT="$OPT -DHAVE_$(tconf_uppercase "$2")=1"
-		return 0
-	else 
-		return 1
-	fi
+	tconf_check_code $1 "$2" "#include <$2>"
 }
 
 tconf_require_header () {
@@ -156,6 +168,7 @@ tconf_search_util () {
 	fi
 
 	UTIL_PREFIX="$2"
+	test -n "$UTIL_PREFIX" && UTIL_PREFIX="$UTIL_PREFIX-"
 	tconf_print -n "search $1... "
 
 	# skip arg and prefix
@@ -181,4 +194,37 @@ tconf_search_cc () {
 		return 0
 	fi
 	CC="$(tconf_search_util "C compiler" "$1" gcc clang tcc cc)"
+}
+
+tconf_find_build () {
+	tconf_print -n "build os... "
+	if test -n "$BUILD" ; then
+		tconf_print "$BUILD"
+		return 0
+	fi
+	if test -n "$CC_FOR_BUILD" && BUILD="$($CC_FOR_BUILD -dumpmachine )" ; then
+		tconf_print "$BUILD"
+		return 0
+	fi
+	tconf_print "unknow"
+	return 1
+}
+
+tconf_find_host () {
+	tconf_print -n "host os... "
+	if test -n "$HOST" ; then
+		tconf_print "$HOST"
+		return 0
+	fi
+	if test -n "$CC" && HOST="$($CC -dumpmachine)" ; then
+		tconf_print "$HOST"
+		return 0
+	fi
+	tconf_print "unknow"
+	return 1
+}
+
+tconf_find_os () {
+	tconf_find_build
+	tconf_find_host
 }

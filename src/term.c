@@ -4,7 +4,9 @@
 #ifdef HAVE_TERMIOS_H
 #include <termios.h>
 #endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <stdio.h>
 #ifdef HAVE_POLL_H
 #include <poll.h>
@@ -19,7 +21,7 @@ int term_width;
 int term_height;
 
 void term_fetch_size(void) {
-#if defined(HAVE_SYS_IOCTL_H) && defined(TIOCGWINSZ)
+#if defined(HAVE_SYS_IOCTL_H) && defined(TIOCGWINSZ) && defined(STDOUT_FILENO)
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &winsz);
 	term_width = winsz.ws_col;
 	term_height = winsz.ws_row;
@@ -101,7 +103,9 @@ int term_get_key(void) {
 }
 
 int term_enter_fullscreen(void) {
+#ifdef HAVE_ISATTY
 	if (!isatty(STDOUT_FILENO)) return -1;
+#endif
 	printf(ESC"[?1049h");
 	printf(ESC"[2J");
 	printf(ESC"[H");
