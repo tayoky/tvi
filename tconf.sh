@@ -124,14 +124,14 @@ tconf_check_code () {
 	tconf_print -n "check $2... "
 	
 	# check if we aready checked this
-	if test -f "$FILE.o" ; then
+	if test -f "$FILE.out" ; then
 		tconf_print "yes(cached)"
 		OPT="$OPT -DHAVE_$(tconf_uppercase "$2")=1"
 		return 0
 	fi
 
 	echo "$3" > "$FILE"
-	if $1 -c "$FILE" -o "$FILE.o" >/dev/null 2>/dev/null ; then
+	if $1 "$FILE" -o "$FILE.out" >/dev/null 2>/dev/null ; then
 		tconf_print "yes"
 		OPT="$OPT -DHAVE_$(tconf_uppercase "$2")=1"
 		return 0
@@ -141,13 +141,28 @@ tconf_check_code () {
 	fi
 }
 
+tconf_check_func () {
+	if [ $# != 3 ] ; then
+		tconf_print "usage : tconf_check_func CC HEADER FUNC"
+		return 1
+	fi
+	tconf_check_code "$1" "$3" "#include <$2>
+void *volatile ptr = (void*)$3;
+int main() {
+	return 0;
+}"
+}
+
 tconf_check_header () {
 	if [ $# != 2 ] ; then
 		tconf_print "usage : tconf_check_header CC HEADER"
 		return 1
 	fi
 
-	tconf_check_code $1 "$2" "#include <$2>"
+	tconf_check_code $1 "$2" "#include <$2>
+int main () {
+	return 0;
+}"
 }
 
 tconf_require_header () {
