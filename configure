@@ -24,3 +24,4 @@ tconf_check_header "$CC" sys/ioctl.h
 tconf_check_func "$CC" "unistd.h" "isatty"
 
 tconf_fini
+exit 0

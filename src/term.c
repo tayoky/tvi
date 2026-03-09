@@ -114,6 +114,8 @@ int term_enter_fullscreen(void) {
 }
 
 void term_exit_fullscreen(void) {
+	printf(ESC"[2J");
+	printf(ESC"[H");
 	printf(ESC"[?1049l");
 }
 
