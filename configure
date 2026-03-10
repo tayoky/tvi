@@ -18,10 +18,15 @@ tconf_check_header "$CC" poll.h
 tconf_check_header "$CC" termios.h
 tconf_check_header "$CC" unistd.h
 tconf_check_header "$CC" signal.h
+tconf_check_header "$CC" dlfcn.h
 tconf_check_header "$CC" sys/ioctl.h
 
 # check functions
 tconf_check_func "$CC" "unistd.h" "isatty"
+tconf_check_func "$CC" "dlfcn.h" "dlopen"
+tconf_check_func "$CC" "dlfcn.h" "dlclose"
+tconf_check_func "$CC" "dlfcn.h" "dlsym"
+tconf_check_func "$CC" "dlfcn.h" "dlerror"
 
 tconf_fini
 exit 0

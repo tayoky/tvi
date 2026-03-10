@@ -100,6 +100,34 @@ static void fix_cursor(tvi_t *tvi) {
 	}
 }
 
+void scroll_set(win_t *win, int scroll) {
+	if (win->scroll == scroll) return;
+	win->scroll = scroll;
+	render_window(&tvi, win);
+	render_flush(&tvi);
+}
+
+void cursor_set_y(win_t *win, int y) {
+	win->cursor_y = y;
+	if (y - 3 < win->scroll) {
+		if (y > 3) {
+			scroll_set(win, y - 3);
+		} else {
+			scroll_set(win, 0);
+		}
+	} else if (y + 3 >= win->scroll + win->height - 1) {
+		if (y + 3 > win->lines_count) {
+			scroll_set(win, win->lines_count-win->height+2);
+		} else {
+			scroll_set(win, y + 3 - win->height + 1);
+		}
+	}
+}
+
+void cursor_add_y(win_t *win, int y) {
+	cursor_set_y(win, win->cursor_y + y);
+}
+
 int insert_mode(tvi_t *tvi) {
 	fix_cursor(tvi);
 	
@@ -156,6 +184,30 @@ int insert_mode(tvi_t *tvi) {
 			}
 			render_flush(tvi);
 			continue;
+		case KEY_UP:
+			if (win->cursor_y <= 0) {
+				term_bell();
+			} else {
+				cursor_add_y(win, -1);
+			}
+			render_flush(tvi);
+			continue;
+		case KEY_DOWN:
+			if (win->cursor_y >= win->lines_count-1) {
+				term_bell();
+			} else {
+				cursor_add_y(win, 1);
+			}
+			render_flush(tvi);
+			continue;
+		case KEY_START:
+			win->cursor_x = 0;
+			render_flush(tvi);
+			continue;
+		case KEY_END:
+			win->cursor_x = strlen(win->text[win->cursor_y]);
+			render_flush(tvi);
+			continue;
 		}
 		char buf = (unsigned char)c;
 		text_insert_buf(win, win->cursor_x, win->cursor_y, &buf, 1);
@@ -171,34 +223,6 @@ redraw:
 	if (win->cursor_x > 0) win->cursor_x--;
 	render_flush(tvi);
 	return 0;
-}
-
-void scroll_set(win_t *win, int scroll) {
-	if (win->scroll == scroll) return;
-	win->scroll = scroll;
-	render_window(&tvi, win);
-	render_flush(&tvi);
-}
-
-void cursor_set_y(win_t *win, int y) {
-	win->cursor_y = y;
-	if (y - 3 < win->scroll) {
-		if (y > 3) {
-			scroll_set(win, y - 3);
-		} else {
-			scroll_set(win, 0);
-		}
-	} else if (y + 3 >= win->scroll + win->height - 1) {
-		if (y + 3 > win->lines_count) {
-			scroll_set(win, win->lines_count-win->height+2);
-		} else {
-			scroll_set(win, y + 3 - win->height + 1);
-		}
-	}
-}
-
-void cursor_add_y(win_t *win, int y) {
-	cursor_set_y(win, win->cursor_y + y);
 }
 
 // set cursor to first non blank char on the line
