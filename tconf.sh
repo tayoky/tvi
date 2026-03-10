@@ -8,7 +8,11 @@ tconf_help () {
 	echo "usage : $(basename "$0") [OPTIONS..]
 generate config.mk from environement
 --cc=CC set the C compiler
+--as=AS set the assembler
+--ar=AR set the archiver
+--ld=LD set the linker
 --cflags=CFLAGS set the CFLAGS
+--clear-cache clear the cache before doing anything
 --prefix=PREFIX set the prefix"
 }
 
@@ -63,6 +67,9 @@ tconf_init () {
 		--debug)
 			OPT="$OPT -DDEBUG=1"
 			;;
+		--clear-cache)
+			rm -fr "$TCONF_DIR/"*
+			;;
 		--help)
 			tconf_help
 			exit 0
@@ -92,13 +99,23 @@ tconf_fini () {
 		tconf_echo_conf AS "$AS"
 		tconf_echo_conf AR "$AR"
 		tconf_echo_conf LD "$LD"
+		tconf_echo_conf READELF "$READELF"
+		tconf_echo_conf OBJCOPY "$OBJCOPY"
+		tconf_echo_conf STRIP "$STRIP"
+		tconf_echo_conf CFLAGS "$CCFLAGS"
+		tconf_echo_conf ASFLAGS "$ASFLAGS"
+		tconf_echo_conf LDFLAGS "$LDFLAGS"
 		tconf_echo_conf HOST "$HOST"
 		tconf_echo_conf ARCH "$ARCH"
 	} > "$TOP/config.mk"
 }
 
-tconf_uppercase () {
-	echo "$@" | tr a-z./ A-Z__
+tconf_to_macro_name () {
+	echo "$@" | tr "a-z./ " "A-Z___"
+}
+
+tconf_to_file_name () {
+	echo "$@" | tr " " "_"
 }
 
 tconf_require () {
@@ -113,12 +130,12 @@ tconf_require () {
 }
 
 tconf_check_code () {
-	if [ $# != 3 ] ; then
-		tconf_print "usage : tconf_check_code CC NAME CODE"
+	if test -z "$3" ; then
+		tconf_print "usage : tconf_check_code CC NAME CODE [CFLAGS]"
 		return 1
 	fi
 
-	FILE="$TCONF_DIR/check-$2.c"
+	FILE="$TCONF_DIR/check-$(tconf_to_file_name $2).c"
 	mkdir -p "$(dirname "$FILE")"
 
 	tconf_print -n "check $2... "
@@ -126,14 +143,14 @@ tconf_check_code () {
 	# check if we aready checked this
 	if test -f "$FILE.out" ; then
 		tconf_print "yes(cached)"
-		OPT="$OPT -DHAVE_$(tconf_uppercase "$2")=1"
+		OPT="$OPT -DHAVE_$(tconf_to_macro_name "$2")=1"
 		return 0
 	fi
 
 	echo "$3" > "$FILE"
-	if $1 "$FILE" -o "$FILE.out" >/dev/null 2>/dev/null ; then
+	if env "CFLAGS=$CFLAGS $4" $1 "$FILE" -o "$FILE.out" >/dev/null 2>/dev/null ; then
 		tconf_print "yes"
-		OPT="$OPT -DHAVE_$(tconf_uppercase "$2")=1"
+		OPT="$OPT -DHAVE_$(tconf_to_macro_name "$2")=1"
 		return 0
 	else
 		tconf_print "no"
@@ -176,6 +193,22 @@ tconf_require_header () {
 	fi
 }
 
+tconf_check_library () {
+	if [ $# != 2 ] ; then
+		tconf_print "usage : tconf_check_library CC LIBRARY"
+		return 1
+	fi
+	tconf_check_code "$1" "lib$2" "int main() { return 0; }" "-l$2"
+}
+
+tconf_check_attribute () {
+	if [ $# != 2 ] ; then
+		tconf_print "usage : tconf_check_attribute CC ATTRIBUTE"
+		return 1
+	fi
+	tconf_check_code "$1" "attribute $2" "int __attribute__(($2)) var; int main() { return var; }"
+}
+
 tconf_search_util () {
 	if test -z "$1" ; then
 		tconf_print "usage : tconf_search_util NAME PREFIX UTILS..."
@@ -209,6 +242,42 @@ tconf_search_cc () {
 		return 0
 	fi
 	CC="$(tconf_search_util "C compiler" "$1" gcc clang tcc cc)"
+}
+
+tconf_search_as () {
+	if [ $# != 1 ] ; then
+		tconf_print "usage : tconf_search_as PREFIX"
+		return 1
+	fi
+	if test -n "$AS" ; then
+		tconf_print "check assembler... $AS"
+		return 0
+	fi
+	AS="$(tconf_search_util "assembler" "$1" gas as)"
+}
+
+tconf_search_ar () {
+	if [ $# != 1 ] ; then
+		tconf_print "usage : tconf_search_ar PREFIX"
+		return 1
+	fi
+	if test -n "$AR" ; then
+		tconf_print "check archiver... $AR"
+		return 0
+	fi
+	AR="$(tconf_search_util "archiver" "$1" ar llvm-ar "tcc -ar")"
+}
+
+tconf_search_ld () {
+	if [ $# != 1 ] ; then
+		tconf_print "usage : tconf_search_ld PREFIX"
+		return 1
+	fi
+	if test -n "$LD" ; then
+		tconf_print "check linker... $LD"
+		return 0
+	fi
+	LD="$(tconf_search_util "linker" "$1" ld)"
 }
 
 tconf_find_build () {

@@ -12,10 +12,9 @@ win_t *win_create(tvi_t *tvi) {
 	}
 	tvi->first_window = win;
 	tvi->focus_window = win;
-	win->text = malloc(2*sizeof(char*));
-	win->text[0] = strdup("hello world");
-	win->text[1] = strdup(" line 2");
-	win->lines_count = 2;
+	win->text = malloc(sizeof(char*));
+	win->text[0] = strdup("");
+	win->lines_count = 1;
 	win->files = malloc(sizeof(char*));
 	win->files[0] = NULL;
 	win->files_count = 1;

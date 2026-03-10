@@ -174,6 +174,7 @@ redraw:
 }
 
 void scroll_set(win_t *win, int scroll) {
+	if (win->scroll == scroll) return;
 	win->scroll = scroll;
 	render_window(&tvi, win);
 	render_flush(&tvi);
