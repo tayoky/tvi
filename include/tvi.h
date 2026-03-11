@@ -48,7 +48,7 @@ typedef struct tvi {
 
 typedef struct syntax {
 	void *handle;
-	const char *(*word_color)(const char*,size_t);
+	const char *(*print_line)(const char*);
 } syntax_t;
 
 int term_enable_raw_mode(void);
@@ -89,7 +89,7 @@ int reg_put(tvi_t *tvi, win_t *win, int name, int x, int y, int after);
 int reg_put_lines(tvi_t *tvi, win_t *win, int name, int addr);
 syntax_t *syntax_load(const char *name);
 void syntax_unload(syntax_t *syntax);
-const char *syntax_word_color(syntax_t *syntax, const char *word, size_t size);
+void syntax_print_line(syntax_t *syntax, const char *line);
 int ex_command(tvi_t *tvi, const char *command);
 void open_files(win_t *win, char *const*files, size_t files_count);
 void read_file(win_t *win, const char *path);

@@ -18,7 +18,8 @@ CFLAGS += --std=c99 -D_POSIX_C_SOURCE=200809L
 
 ALL = $(BUILDDIR)/tvi
 ifeq ($(HAVE_DYNAMIC),yes)
-	ALL += $(SYNTAX);
+	ALL += $(SYNTAX)
+	CFLAGS += -rdynamic
 endif
 
 all : $(ALL)
@@ -41,6 +42,8 @@ install-syntax : all
 	@echo '[installing syntax libs]'
 	@mkdir -p $(DESTDIR)$(PREFIX)/lib/tvi
 	@cp $(SYNTAX) $(DESTDIR)$(PREFIX)/lib/tvi
+	@echo '[install syntax aliases]'
+	@rm -f $(DESTDIR)$(PREFIX)/lib/tvi/h.so && ln -s c.so $(DESTDIR)$(PREFIX)/lib/tvi/h.so
 
 INSTALL =
 ifeq ($(HAVE_DYNAMIC),yes)

@@ -1,4 +1,6 @@
 #include <string.h>
+#include <stdio.h>
+#include <ctype.h>
 #include <tvi.h>
 
 const char *types[] = {
@@ -19,6 +21,7 @@ const char *types[] = {
 	"union",
 	"enum",
 	"const",
+	"typedef",
 
 // standard types
 	"size_t",
@@ -38,8 +41,20 @@ const char *keywords[] = {
 	"case",
 	"default",
 	"sizeof",
+	"break",
+	"continue",
 };
 
+const char *preprocs[] = {
+	"#define",
+	"#undef"
+	"#ifdef",
+	"#ifndef",
+	"#if"
+	"#else",
+	"#elif",
+	"#endif",
+};
 
 int init() {
 	return 0;
@@ -63,8 +78,72 @@ int is_keyword(const char *word, size_t len) {
 	return 0;
 }
 
+int is_preproc(const char *word, size_t len) {
+	for (size_t i=0; i<sizeof(preprocs)/sizeof(*preprocs); i++) {
+		if (len != strlen(preprocs[i])) continue;
+		if (memcmp(word, preprocs[i], len)) continue;
+		return 1;
+	}
+	return 0;
+}
+
 const char *word_color(const char *word, size_t size) {
 	if (is_type(word, size)) return "\033[32m";
 	if (is_keyword(word, size)) return "\033[33m";
 	return NULL;
+}
+
+static int is_word_char(int c) {
+	return isalpha(c) || c == '_';
+}
+
+void print_line(const char *line) {
+	// print word by word
+	int last_is_reset = 1;
+	while (isblank(*line)) {
+		putchar(*line);
+		line++;
+	}
+	if (*line == '#') {
+		// find lenght of word
+		const char *word = line;
+		size_t word_len = 1;
+		while (is_word_char(word[word_len])) {
+			word_len++;
+		}
+		if (is_preproc(word, word_len)) {
+			printf("\033[34m%.*s", (int)word_len, word);
+			line += word_len;
+		}
+	}
+	while (*line) {
+		if (!is_word_char(*line)) {
+			const char *start = line;
+			size_t len = 0;
+			while (!is_word_char(*line) && *line) {
+				line++;
+				len++;
+			}
+			term_reset_color();
+			last_is_reset = 1;
+			printf("%.*s", (int)len, start);
+			continue;
+		}
+		// find lenght of word
+		const char *word = line;
+		size_t word_len = 0;
+		while (is_word_char(*line)) {
+			word_len++;
+			line++;
+		}
+		const char *color = word_color(word, word_len);
+		if (color) {
+			printf("%s", color);
+		} else {
+			if (!last_is_reset) term_reset_color();
+			last_is_reset = 1;
+		}
+		printf("%.*s", (int)word_len, word);
+		continue;
+	}
 }
