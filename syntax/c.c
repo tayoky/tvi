@@ -28,6 +28,7 @@ const char *types[] = {
 	"ssize_t",
 	"FILE",
 	"DIR",
+	"va_list",
 };
 
 const char *keywords[] = {
@@ -54,6 +55,7 @@ const char *preprocs[] = {
 	"#else",
 	"#elif",
 	"#endif",
+	"#include",
 };
 
 int init() {
@@ -97,6 +99,10 @@ static int is_word_char(int c) {
 	return isalpha(c) || c == '_';
 }
 
+static int reach_line_end(const char *line) {
+	return !*line || (*line == '/' && line[1] == '/');
+}
+
 void print_line(const char *line) {
 	// print word by word
 	int last_is_reset = 1;
@@ -116,11 +122,11 @@ void print_line(const char *line) {
 			line += word_len;
 		}
 	}
-	while (*line) {
+	while (!reach_line_end(line)) {
 		if (!is_word_char(*line)) {
 			const char *start = line;
 			size_t len = 0;
-			while (!is_word_char(*line) && *line) {
+			while (!is_word_char(*line) && !reach_line_end(line)) {
 				line++;
 				len++;
 			}
@@ -145,5 +151,9 @@ void print_line(const char *line) {
 		}
 		printf("%.*s", (int)word_len, word);
 		continue;
+	}
+
+	if (*line) {
+		printf("\033[36m%s", line);
 	}
 }
