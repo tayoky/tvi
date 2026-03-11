@@ -28,5 +28,16 @@ tconf_check_func "$CC" "dlfcn.h" "dlclose"
 tconf_check_func "$CC" "dlfcn.h" "dlsym"
 tconf_check_func "$CC" "dlfcn.h" "dlerror"
 
+# need -rdynamic
+if tconf_check_cc_option "$CC" "-rdynamic" ; then
+	RDYNAMIC="-rdynamic"
+elif tconf_check_cc_option "$CC" "-Wl,--export-dynamic" ; then
+	RDYNAMIC="-Wl,--export-dynamic"
+else
+	RDYNAMIC=""
+fi
+
 tconf_fini
+echo "RDYNAMIC=$RDYNAMIC" >> "$TOP/config.mk"
+
 exit 0

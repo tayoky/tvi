@@ -19,7 +19,7 @@ CFLAGS += --std=c99 -D_POSIX_C_SOURCE=200809L
 ALL = $(BUILDDIR)/tvi
 ifeq ($(HAVE_DYNAMIC),yes)
 	ALL += $(SYNTAX)
-	CFLAGS += -rdynamic
+	CFLAGS += $(RDYNAMIC)
 endif
 
 all : $(ALL)

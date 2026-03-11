@@ -93,8 +93,8 @@ tconf_echo_conf () {
 tconf_fini () {
 	{
 		echo "# automaticly generated from $(basename "$0")"
-		echo "PREFIX=$PREFIX"
 		echo "CFLAGS=$CFLAGS $OPT"
+		tconf_echo_conf PREFIX "$PREFIX"
 		tconf_echo_conf CC "$CC"
 		tconf_echo_conf AS "$AS"
 		tconf_echo_conf AR "$AR"
@@ -143,18 +143,27 @@ tconf_check_code () {
 	# check if we aready checked this
 	if test -f "$FILE.out" ; then
 		tconf_print "yes(cached)"
-		OPT="$OPT -DHAVE_$(tconf_to_macro_name "$2")=1"
 		return 0
 	fi
 
 	echo "$3" > "$FILE"
 	if env "CFLAGS=$CFLAGS $4" $1 "$FILE" -o "$FILE.out" >/dev/null 2>/dev/null ; then
 		tconf_print "yes"
-		OPT="$OPT -DHAVE_$(tconf_to_macro_name "$2")=1"
 		return 0
 	else
 		tconf_print "no"
 		return 1
+	fi
+}
+
+tconf_check_code_define () {
+	if test -z "$3" ; then
+		tconf_print "usage : tconf_check_code_define CC NAME CODE [CFLAGS]"
+		return 1
+	fi
+
+	if tconf_check_code "$1" "$2" "$3" "$4" ; then
+		OPT="$OPT -DHAVE_$(tconf_to_macro_name "$2")=1"
 	fi
 }
 
@@ -163,7 +172,7 @@ tconf_check_func () {
 		tconf_print "usage : tconf_check_func CC HEADER FUNC"
 		return 1
 	fi
-	tconf_check_code "$1" "$3" "#include <$2>
+	tconf_check_code_define "$1" "$3" "#include <$2>
 void *volatile ptr = (void*)$3;
 int main() {
 	return 0;
@@ -176,7 +185,7 @@ tconf_check_header () {
 		return 1
 	fi
 
-	tconf_check_code $1 "$2" "#include <$2>
+	tconf_check_code_define $1 "$2" "#include <$2>
 int main () {
 	return 0;
 }"
@@ -198,7 +207,7 @@ tconf_check_library () {
 		tconf_print "usage : tconf_check_library CC LIBRARY"
 		return 1
 	fi
-	tconf_check_code "$1" "lib$2" "int main() { return 0; }" "-l$2"
+	tconf_check_code_define "$1" "lib$2" "int main() { return 0; }" "-l$2"
 }
 
 tconf_check_attribute () {
@@ -206,7 +215,15 @@ tconf_check_attribute () {
 		tconf_print "usage : tconf_check_attribute CC ATTRIBUTE"
 		return 1
 	fi
-	tconf_check_code "$1" "attribute $2" "int __attribute__(($2)) var; int main() { return var; }"
+	tconf_check_code_define "$1" "attribute $2" "int __attribute__(($2)) var; int main() { return var; }"
+}
+
+tconf_check_cc_option () {
+	if [ "$#" != 2 ] ; then
+		tconf_print "usage : tconf_check_cc_option CC OPTION"
+		return 1
+	fi
+	tconf_check_code "$1" "$2" "int main(){return 0;}" "$2"
 }
 
 tconf_search_util () {
