@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+struct syntax;
+
 typedef struct win {
 	struct win *next;
 	struct win *prev;
@@ -16,6 +18,7 @@ typedef struct win {
 	int flags;
 	char **text;
 	char **files;
+	struct syntax *syntax;
 	int lines_count;
 	int files_count;
 	int file_index;
@@ -42,6 +45,11 @@ typedef struct tvi {
 	reg_t digit_regs[10];
 	reg_t unamed_reg;
 } tvi_t;
+
+typedef struct syntax {
+	void *handle;
+	const char *(*word_color)(const char*,size_t);
+} syntax_t;
 
 int term_enable_raw_mode(void);
 void term_quit_raw_mode(void);
@@ -79,6 +87,9 @@ void text_mark_dirty(win_t *win);
 void reg_write(tvi_t *tvi, int name, char *const*lines, size_t lines_count, int type);
 int reg_put(tvi_t *tvi, win_t *win, int name, int x, int y, int after);
 int reg_put_lines(tvi_t *tvi, win_t *win, int name, int addr);
+syntax_t *syntax_load(const char *name);
+void syntax_unload(syntax_t *syntax);
+const char *syntax_word_color(syntax_t *syntax, const char *word, size_t size);
 int ex_command(tvi_t *tvi, const char *command);
 void open_files(win_t *win, char *const*files, size_t files_count);
 void read_file(win_t *win, const char *path);

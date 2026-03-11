@@ -1,6 +1,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <tvi.h>
 
 void render_text(tvi_t *tvi, win_t *win) {
@@ -69,7 +70,42 @@ int render_line(tvi_t *tvi, win_t *win, size_t index) {
 			}
 			term_goto(win->x, win->y + y);
 		}
-		printf("%s", line);
+		if (win->syntax) {
+			// print word by word
+			int last_is_reset = 1;
+			while (*line) {
+				if (!isalpha(*line)) {
+					const char *start = line;
+					size_t len = 0;
+					while (!isalpha(*line) && *line) {
+						line++;
+						len++;
+					}
+					term_reset_color();
+					last_is_reset = 1;
+					printf("%.*s", (int)len, start);
+					continue;
+				}
+				// find lenght of word
+				const char *word = line;
+				size_t word_len = 0;
+				while (isalpha(*line)) {
+					word_len++;
+					line++;
+				}
+				const char *color = syntax_word_color(win->syntax, word, word_len);
+				if (color) {
+					printf("%s", color);
+				} else {
+					if (!last_is_reset) term_reset_color();
+					last_is_reset = 1;
+				}
+				printf("%.*s", (int)word_len, word);
+				continue;
+			}
+		} else {
+			printf("%s", line);
+		}
 	}
 	return 0;
 }

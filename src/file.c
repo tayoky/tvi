@@ -4,8 +4,32 @@
 #include <stdio.h>
 #include <tvi.h>
 
+static const char *file_ext(const char *path) {
+	const char *name = strrchr(path, '/');
+	if (name) {
+		name++;
+	} else {
+		name = path;
+	}
+	const char *ext = strrchr(name, '.');
+	if (ext) {
+		ext++;
+	}
+	return ext;
+}
+
 void read_file(win_t *win, const char *path) {
 	free_list(win->text, win->lines_count);
+	syntax_unload(win->syntax);
+
+	// load syntax highligher if we can
+	const char *ext = file_ext(path);
+	if (ext) {
+		win->syntax = syntax_load(ext);
+	} else {
+		win->syntax = NULL;
+	}
+
 	FILE *file = fopen(path, "r");
 	if (!file) {
 empty:

@@ -29,6 +29,8 @@ void free_list(char **list, size_t count) {
 }
 
 void win_free(tvi_t *tvi, win_t *win) {
+	(void)tvi;
 	free_list(win->text, win->lines_count);
 	free_list(win->files, win->files_count);
+	syntax_unload(win->syntax);
 }
