@@ -5,8 +5,6 @@
 #endif
 #include <tvi.h>
 
-int getchar();
-
 syntax_t *syntax_load(const char *name) {
 #if defined(HAVE_DLOPEN) && defined(HAVE_DLSYM)
 	char path[PATH_MAX];
