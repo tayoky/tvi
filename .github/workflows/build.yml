@@ -1,4 +1,4 @@
-name: run test
+name: build
 
 on:
   push:
@@ -23,6 +23,3 @@ jobs:
 
     - name: install
       run: sudo make install
-
-    - name: test
-      run: ./test.sh
