@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <limits.h>
 #ifdef HAVE_DLFCN_H
 #include <dlfcn.h>

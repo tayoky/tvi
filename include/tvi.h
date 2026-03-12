@@ -2,6 +2,7 @@
 #define TVI_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 struct syntax;
 
