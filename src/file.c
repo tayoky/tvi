@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include <tvi.h>
 
+#ifndef LINE_MAX
+#define LINE_MAX 1024
+#endif
+
 static const char *file_ext(const char *path) {
 	const char *name = strrchr(path, '/');
 	if (name) {
